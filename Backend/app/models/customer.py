@@ -12,5 +12,13 @@ class Customer(BaseModel):
     purchases = db.relationship("Purchase", back_populates="customer")
     sms_logs = db.relationship("SMSLog", back_populates="customer")
 
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "phone": self.phone,
+            "email": self.email,
+        }
+
     def __repr__(self) -> str:
         return f"<Customer {self.name}>"

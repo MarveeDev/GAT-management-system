@@ -16,6 +16,8 @@ class AuditAction:
     USER_SHOP_CHANGED = "user.shop_changed"
     USER_PASSWORD_RESET = "user.password_reset"
 
+    PURCHASE_CREATED = "purchase.created"
+
 
 def add_audit_log(
     user_id: str | None,

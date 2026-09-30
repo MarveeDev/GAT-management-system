@@ -29,5 +29,19 @@ class Purchase(BaseModel):
     customer = db.relationship("Customer", back_populates="purchases")
     sms_logs = db.relationship("SMSLog", back_populates="purchase")
 
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "shop_id": self.shop_id,
+            "staff_id": self.staff_id,
+            "customer_id": self.customer_id,
+            "product": self.product,
+            "amount": str(self.amount) if self.amount is not None else None,
+            "currency": self.currency,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            "customer": self.customer.to_dict() if self.customer else None,
+        }
+
     def __repr__(self) -> str:
         return f"<Purchase {self.product} {self.amount} {self.currency}>"
