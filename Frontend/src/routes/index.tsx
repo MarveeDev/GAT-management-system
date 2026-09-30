@@ -7,6 +7,7 @@ import AppLayout from '../layouts/AppLayout'
 import Login from '../pages/Login'
 import NotFound from '../pages/NotFound'
 import Placeholder from '../pages/Placeholder'
+import Shops from '../pages/Shops'
 
 const Dashboard = lazy(() => import('../pages/Dashboard'))
 
@@ -63,7 +64,7 @@ export default function AppRoutes() {
               </Suspense>
             }
           />
-          <Route path="/shops" element={<Placeholder title="Shop Management" />} />
+          <Route path="/shops" element={<Shops />} />
           <Route path="/staff" element={<Placeholder title="Staff Management" />} />
           <Route path="/purchases" element={<Placeholder title="Purchases" />} />
           <Route path="/customers" element={<Placeholder title="Customers" />} />
