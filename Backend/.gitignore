@@ -9,6 +9,11 @@ env/
 # Environment / secrets
 .env
 
+# Database (local SQLite dev database; production uses PostgreSQL)
+*.db
+dev.db
+instance/
+
 # Test / coverage
 .pytest_cache/
 .coverage
