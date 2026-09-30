@@ -1,4 +1,4 @@
-import { getAccessToken } from './tokenStorage'
+import { clearAccessToken, getAccessToken } from './tokenStorage'
 
 export class ApiError extends Error {
   readonly status: number
@@ -21,6 +21,12 @@ interface RequestOptions {
   body?: unknown
   auth?: boolean
   headers?: Record<string, string>
+}
+
+let unauthorizedHandler: (() => void) | null = null
+
+export function setUnauthorizedHandler(handler: (() => void) | null): void {
+  unauthorizedHandler = handler
 }
 
 function extractErrorMessage(data: unknown, status: number): string {
@@ -62,6 +68,11 @@ async function request<T>(path: string, options: RequestOptions): Promise<T> {
   })
 
   const data = safeParse(await response.text())
+
+  if (auth && response.status === 401) {
+    clearAccessToken()
+    unauthorizedHandler?.()
+  }
 
   if (!response.ok) {
     throw new ApiError(response.status, extractErrorMessage(data, response.status), data)
