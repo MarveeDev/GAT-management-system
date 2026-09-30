@@ -1,24 +1,46 @@
 @import "tailwindcss";
 
 @theme {
+  /* Navy — sidebar / dark surfaces */
   --color-navy-950: #0a1a2f;
   --color-navy-900: #0f2744;
   --color-navy-800: #16345c;
   --color-navy-700: #1e4273;
 
+  /* Brand blue — primary actions & active states */
   --color-brand-50: #eff6ff;
   --color-brand-100: #dbeafe;
+  --color-brand-200: #bfdbfe;
+  --color-brand-300: #93c5fd;
+  --color-brand-400: #60a5fa;
   --color-brand-500: #3b82f6;
   --color-brand-600: #2563eb;
   --color-brand-700: #1d4ed8;
+  --color-brand-800: #1e40af;
+  --color-brand-900: #1e3a8a;
 
+  /* Success — positive/confirmed states */
   --color-success-50: #ecfdf5;
+  --color-success-100: #d1fae5;
+  --color-success-500: #22c55e;
   --color-success-600: #16a34a;
   --color-success-700: #15803d;
+  --color-success-800: #166534;
+  --color-success-900: #14532d;
 
+  /* Danger — errors / failed states */
   --color-danger-50: #fef2f2;
+  --color-danger-100: #fee2e2;
+  --color-danger-500: #ef4444;
   --color-danger-600: #dc2626;
   --color-danger-700: #b91c1c;
+  --color-danger-800: #991b1b;
+  --color-danger-900: #7f1d1d;
+
+  /* Warning — pending/in-progress states */
+  --color-warning-50: #fffbeb;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
 }
 
 :root {
