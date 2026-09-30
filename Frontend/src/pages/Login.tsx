@@ -21,7 +21,7 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null)
 
   const from =
-    (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? '/'
+    (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? '/dashboard'
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()

@@ -3,7 +3,6 @@ import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import LoadingSpinner from '../components/LoadingSpinner'
 import { useAuth } from '../contexts/authContext'
 import AppLayout from '../layouts/AppLayout'
-import Home from '../pages/Home'
 import Login from '../pages/Login'
 import NotFound from '../pages/NotFound'
 import Placeholder from '../pages/Placeholder'
@@ -39,7 +38,7 @@ function LoginRoute() {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/" replace />
+    return <Navigate to="/dashboard" replace />
   }
 
   return <Login />
@@ -52,7 +51,7 @@ export default function AppRoutes() {
 
       <Route element={<ProtectedLayout />}>
         <Route element={<AppLayout />}>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Placeholder title="Dashboard" />} />
           <Route path="/shops" element={<Placeholder title="Shop Management" />} />
           <Route path="/staff" element={<Placeholder title="Staff Management" />} />

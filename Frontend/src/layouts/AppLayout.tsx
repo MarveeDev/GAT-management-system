@@ -1,91 +1,71 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Outlet } from 'react-router-dom'
+import { Menu, X } from 'lucide-react'
 
-import { useAuth } from '../contexts/authContext'
-
-const NAV_ITEMS = [
-  { to: '/', label: 'Overview', end: true },
-  { to: '/dashboard', label: 'Dashboard' },
-  { to: '/shops', label: 'Shops' },
-  { to: '/staff', label: 'Staff' },
-  { to: '/purchases', label: 'Purchases' },
-  { to: '/customers', label: 'Customers' },
-  { to: '/sms', label: 'SMS' },
-  { to: '/reports', label: 'Reports' },
-]
+import SidebarContent from '../components/navigation/SidebarContent'
 
 export default function AppLayout() {
-  const { user, logout } = useAuth()
-  const navigate = useNavigate()
+  const [mobileOpen, setMobileOpen] = useState(false)
 
-  function handleLogout() {
-    logout()
-    navigate('/login', { replace: true })
-  }
+  useEffect(() => {
+    if (!mobileOpen) return
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') setMobileOpen(false)
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [mobileOpen])
 
   return (
     <div className="flex min-h-screen">
-      <aside className="hidden w-64 shrink-0 flex-col bg-navy-900 text-white md:flex">
-        <div className="flex items-center gap-3 px-5 py-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold">
-            GAE
-          </div>
-          <div>
-            <p className="text-sm font-semibold leading-tight">Great Alexender</p>
-            <p className="text-xs text-white/60">Enterprise</p>
-          </div>
-        </div>
-
-        <nav className="flex-1 space-y-1 px-3 py-3">
-          {NAV_ITEMS.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) =>
-                `block rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-brand-600 text-white'
-                    : 'text-white/70 hover:bg-white/10 hover:text-white'
-                }`
-              }
-            >
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
-
-        <div className="border-t border-white/10 px-5 py-4">
-          {user && (
-            <div className="mb-3">
-              <p className="truncate text-sm font-medium text-white">{user.name}</p>
-              <p className="text-xs text-white/50">{user.role}</p>
-            </div>
-          )}
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="w-full rounded-lg bg-white/10 px-3 py-2 text-sm font-medium text-white/80 transition-colors hover:bg-white/20 hover:text-white"
-          >
-            Sign out
-          </button>
-        </div>
+      <aside className="hidden w-64 shrink-0 bg-navy-900 md:block">
+        <SidebarContent />
       </aside>
 
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 md:hidden">
+          <div
+            className="absolute inset-0 bg-black/50"
+            aria-hidden="true"
+            onClick={() => setMobileOpen(false)}
+          />
+          <div
+            className="absolute inset-y-0 left-0 w-72 max-w-[85%] bg-navy-900 text-white shadow-xl"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation"
+          >
+            <button
+              type="button"
+              onClick={() => setMobileOpen(false)}
+              aria-label="Close menu"
+              className="absolute right-3 top-4 z-10 rounded-lg p-1.5 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+            >
+              <X className="h-5 w-5" aria-hidden="true" />
+            </button>
+            <SidebarContent onNavigate={() => setMobileOpen(false)} />
+          </div>
+        </div>
+      )}
+
       <div className="flex min-w-0 flex-1 flex-col bg-slate-50">
-        <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 md:hidden">
+        <header className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 md:hidden">
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            aria-label="Open menu"
+            className="rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-100"
+          >
+            <Menu className="h-5 w-5" aria-hidden="true" />
+          </button>
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-xs font-bold text-white">
               GAE
             </div>
-            <span className="text-sm font-semibold text-slate-900">Great Alexender Enterprise</span>
+            <span className="truncate text-sm font-semibold text-slate-900">
+              Great Alexender Enterprise
+            </span>
           </div>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
-          >
-            Sign out
-          </button>
         </header>
 
         <main className="flex-1 px-4 py-6 md:px-8">
