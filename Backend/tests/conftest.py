@@ -8,6 +8,7 @@ from app.extensions import db as _db
 class TestConfig:
     TESTING = True
     SECRET_KEY = "test-secret"
+    JWT_SECRET_KEY = "test-jwt-secret-key-that-is-at-least-32-bytes-long"
     DEBUG = False
     CORS_ORIGINS = ["http://localhost:5173"]
     SQLALCHEMY_DATABASE_URI = "sqlite://"

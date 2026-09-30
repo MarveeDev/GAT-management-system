@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 
 from dotenv import load_dotenv
 
@@ -8,7 +9,12 @@ BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
 
 class Config:
-    SECRET_KEY = os.getenv("JWT_SECRET", "dev-only-change-me")
+    SECRET_KEY = os.getenv("SECRET_KEY", "dev-only-change-me")
+
+    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-only-jwt-secret-change-me")
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(
+        hours=int(os.getenv("JWT_ACCESS_TOKEN_HOURS", "12"))
+    )
 
     CORS_ORIGINS = [
         origin.strip()
