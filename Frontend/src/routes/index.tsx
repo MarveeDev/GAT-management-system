@@ -8,6 +8,7 @@ import Login from '../pages/Login'
 import NotFound from '../pages/NotFound'
 import Placeholder from '../pages/Placeholder'
 import Shops from '../pages/Shops'
+import Staff from '../pages/Staff'
 
 const Dashboard = lazy(() => import('../pages/Dashboard'))
 
@@ -65,7 +66,7 @@ export default function AppRoutes() {
             }
           />
           <Route path="/shops" element={<Shops />} />
-          <Route path="/staff" element={<Placeholder title="Staff Management" />} />
+          <Route path="/staff" element={<Staff />} />
           <Route path="/purchases" element={<Placeholder title="Purchases" />} />
           <Route path="/customers" element={<Placeholder title="Customers" />} />
           <Route path="/sms" element={<Placeholder title="SMS" />} />
