@@ -4,3 +4,9 @@ export interface Pagination {
   total: number
   pages: number
 }
+
+export interface AsyncSection<T> {
+  data: T | null
+  loading: boolean
+  error: string | null
+}

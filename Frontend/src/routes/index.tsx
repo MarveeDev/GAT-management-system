@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 
 import LoadingSpinner from '../components/LoadingSpinner'
@@ -6,6 +7,8 @@ import AppLayout from '../layouts/AppLayout'
 import Login from '../pages/Login'
 import NotFound from '../pages/NotFound'
 import Placeholder from '../pages/Placeholder'
+
+const Dashboard = lazy(() => import('../pages/Dashboard'))
 
 function FullScreenLoader() {
   return (
@@ -52,7 +55,14 @@ export default function AppRoutes() {
       <Route element={<ProtectedLayout />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<Placeholder title="Dashboard" />} />
+          <Route
+            path="/dashboard"
+            element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <Dashboard />
+              </Suspense>
+            }
+          />
           <Route path="/shops" element={<Placeholder title="Shop Management" />} />
           <Route path="/staff" element={<Placeholder title="Staff Management" />} />
           <Route path="/purchases" element={<Placeholder title="Purchases" />} />
