@@ -11,6 +11,7 @@ interface SidebarContentProps {
 export default function SidebarContent({ onNavigate }: SidebarContentProps) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const role = user?.role
 
   function handleLogout() {
     logout()
@@ -32,37 +33,43 @@ export default function SidebarContent({ onNavigate }: SidebarContentProps) {
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-2" aria-label="Main navigation">
-        {NAV_GROUPS.map((group) => (
-          <div key={group.title} className="mb-4">
-            <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-white/40">
-              {group.title}
-            </p>
-            <ul className="space-y-1">
-              {group.items.map((item) => {
-                const Icon = item.icon
-                return (
-                  <li key={item.path}>
-                    <NavLink
-                      to={item.path}
-                      end
-                      onClick={onNavigate}
-                      className={({ isActive }) =>
-                        `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                          isActive
-                            ? 'bg-brand-600 text-white'
-                            : 'text-white/70 hover:bg-white/10 hover:text-white'
-                        }`
-                      }
-                    >
-                      <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                      <span className="truncate">{item.label}</span>
-                    </NavLink>
-                  </li>
-                )
-              })}
-            </ul>
-          </div>
-        ))}
+        {NAV_GROUPS.map((group) => {
+          const items = group.items.filter(
+            (item) => !item.roles || (role !== undefined && item.roles.includes(role)),
+          )
+          if (items.length === 0) return null
+          return (
+            <div key={group.title} className="mb-4">
+              <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-white/40">
+                {group.title}
+              </p>
+              <ul className="space-y-1">
+                {items.map((item) => {
+                  const Icon = item.icon
+                  return (
+                    <li key={item.path}>
+                      <NavLink
+                        to={item.path}
+                        end
+                        onClick={onNavigate}
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                            isActive
+                              ? 'bg-brand-600 text-white'
+                              : 'text-white/70 hover:bg-white/10 hover:text-white'
+                          }`
+                        }
+                      >
+                        <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        <span className="truncate">{item.label}</span>
+                      </NavLink>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          )
+        })}
       </nav>
 
       <div className="border-t border-white/10 px-5 py-4">
