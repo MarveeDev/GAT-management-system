@@ -1,4 +1,5 @@
-import { Eye, MapPin, Pencil, Phone } from 'lucide-react'
+import { Eye, Hash, MapPin, Pencil, Phone } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 
 import type { Shop } from '../../types'
 
@@ -25,34 +26,46 @@ function StatusBadge({ status }: { status: Shop['status'] }) {
   )
 }
 
+function InfoRow({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: LucideIcon
+  label: string
+  value: string | undefined
+}) {
+  return (
+    <div className="flex items-start gap-1.5">
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+      <dt className="shrink-0 font-medium text-slate-500">{label}</dt>
+      <dd className={`min-w-0 break-words ${value ? 'text-slate-700' : 'text-slate-400'}`}>
+        {value || 'Not provided'}
+      </dd>
+    </div>
+  )
+}
+
 export default function ShopCard({ shop, onEdit, onDetails }: ShopCardProps) {
+  const location = shop.location?.trim() || undefined
+  const phone = shop.phone?.trim() || undefined
+  const senderId = shop.sender_id?.trim() || undefined
+
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="truncate text-base font-semibold text-slate-900">{shop.name}</h3>
-          {shop.location && (
-            <p className="mt-1 flex items-center gap-1.5 text-sm text-slate-500">
-              <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-              <span className="truncate">{shop.location}</span>
-            </p>
-          )}
-        </div>
-        <StatusBadge status={shop.status} />
+        <h3 className="min-w-0 break-words text-base font-semibold leading-snug text-slate-900">
+          {shop.name}
+        </h3>
+        <span className="shrink-0">
+          <StatusBadge status={shop.status} />
+        </span>
       </div>
 
-      <dl className="mt-4 space-y-1.5 text-sm">
-        {shop.phone && (
-          <div className="flex items-center gap-1.5 text-slate-600">
-            <Phone className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
-            <dd>{shop.phone}</dd>
-          </div>
-        )}
-        {shop.sender_id && (
-          <div className="text-slate-600">
-            <span className="text-slate-400">Sender ID:</span> {shop.sender_id}
-          </div>
-        )}
+      <dl className="mt-4 space-y-2 text-sm">
+        <InfoRow icon={MapPin} label="Location:" value={location} />
+        <InfoRow icon={Phone} label="Phone:" value={phone} />
+        <InfoRow icon={Hash} label="Sender ID:" value={senderId} />
       </dl>
 
       {(onEdit || onDetails) && (
