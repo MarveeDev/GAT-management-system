@@ -3,6 +3,7 @@ from flask import Flask
 
 from app.extensions import db
 from app.models.shop import Shop, ShopStatus
+from app.services.template_service import ensure_default_template
 from app.services.user_service import create_super_admin
 
 
@@ -39,7 +40,10 @@ def init_cli(app: Flask) -> None:
             created += 1
 
         db.session.commit()
-        print(f"Seed complete. Created {created} shop(s).")
+
+        ensure_default_template()
+
+        print(f"Seed complete. Created {created} shop(s) and ensured the default SMS template.")
 
     @app.cli.command("seed-admin")
     def seed_admin() -> None:

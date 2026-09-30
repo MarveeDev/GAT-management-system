@@ -18,6 +18,7 @@ def create_app(config_object: type[Config] = Config) -> Flask:
     from app.routes.health import health_bp
     from app.routes.purchases import purchases_bp
     from app.routes.shops import shops_bp
+    from app.routes.sms import sms_bp
     from app.routes.users import users_bp
 
     app.register_blueprint(health_bp, url_prefix="/api")
@@ -25,6 +26,7 @@ def create_app(config_object: type[Config] = Config) -> Flask:
     app.register_blueprint(shops_bp, url_prefix="/api")
     app.register_blueprint(users_bp, url_prefix="/api")
     app.register_blueprint(purchases_bp, url_prefix="/api")
+    app.register_blueprint(sms_bp, url_prefix="/api")
 
     from app import models  # noqa: F401  (register models with SQLAlchemy)
 

@@ -28,3 +28,10 @@ class Config:
         "DATABASE_URL", f"sqlite:///{os.path.join(BASE_DIR, 'dev.db')}"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    # SMS provider (mock by default; never sends real SMS)
+    SMS_PROVIDER = os.getenv("SMS_PROVIDER", "mock")
+    SMS_API_KEY = os.getenv("SMS_API_KEY", "")
+    SMS_API_SECRET = os.getenv("SMS_API_SECRET", "")
+    SMS_SENDER_ID = os.getenv("SMS_SENDER_ID", "")
+    SMS_MOCK_FAIL = os.getenv("SMS_MOCK_FAIL", "0") == "1"

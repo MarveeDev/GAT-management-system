@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, current_app, jsonify, request
 
-from app.services import purchase_service
+from app.services import purchase_service, sms_service
 from app.utils.auth import get_current_user, roles_required
 
 purchases_bp = Blueprint("purchases", __name__)
@@ -68,7 +68,14 @@ def create_purchase():
     if error:
         status, message = error
         return jsonify({"error": message}), status
-    return jsonify({"purchase": purchase.to_dict()}), 201
+
+    try:
+        _, sms_info = sms_service.send_purchase_sms(purchase)
+    except Exception as exc:
+        current_app.logger.error("SMS workflow error: %s", exc)
+        sms_info = {"status": "FAILED", "error": "SMS delivery failed."}
+
+    return jsonify({"purchase": purchase.to_dict(), "sms": sms_info}), 201
 
 
 @purchases_bp.get("/purchases")

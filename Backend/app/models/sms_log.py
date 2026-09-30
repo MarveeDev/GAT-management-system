@@ -44,5 +44,22 @@ class SMSLog(BaseModel):
     purchase = db.relationship("Purchase", back_populates="sms_logs")
     customer = db.relationship("Customer", back_populates="sms_logs")
 
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "shop_id": self.shop_id,
+            "purchase_id": self.purchase_id,
+            "customer_id": self.customer_id,
+            "phone_number": self.phone_number,
+            "message": self.message,
+            "provider": self.provider,
+            "provider_message_id": self.provider_message_id,
+            "status": self.status,
+            "error_message": self.error_message,
+            "sent_at": self.sent_at.isoformat() if self.sent_at else None,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
     def __repr__(self) -> str:
         return f"<SMSLog {self.status} to {self.phone_number}>"

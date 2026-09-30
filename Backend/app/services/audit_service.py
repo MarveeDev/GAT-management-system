@@ -18,6 +18,10 @@ class AuditAction:
 
     PURCHASE_CREATED = "purchase.created"
 
+    SMS_SENT = "sms.sent"
+    SMS_FAILED = "sms.failed"
+    SMS_RETRY = "sms.retry"
+
 
 def add_audit_log(
     user_id: str | None,

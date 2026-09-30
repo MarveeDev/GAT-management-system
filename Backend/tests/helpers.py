@@ -2,7 +2,18 @@ from decimal import Decimal
 
 from werkzeug.security import generate_password_hash
 
-from app.models import Customer, Purchase, Shop, ShopStatus, User, UserRole, UserStatus
+from app.models import (
+    Customer,
+    Purchase,
+    Shop,
+    ShopStatus,
+    SMSLog,
+    SMSTemplate,
+    SMSStatus,
+    User,
+    UserRole,
+    UserStatus,
+)
 
 
 def make_shop(session, name, status=ShopStatus.ACTIVE, **kwargs):
@@ -72,3 +83,38 @@ def make_purchase(session, shop, staff, customer, product="Rice", amount=Decimal
     session.add(purchase)
     session.commit()
     return purchase
+
+
+def make_template(session, name="PURCHASE_THANK_YOU", message=None, is_active=True):
+    if message is None:
+        message = (
+            "Hi {{customer_name}}, thank you for purchasing {{product}} "
+            "for GHS {{amount}} at {{shop_name}}."
+        )
+    template = SMSTemplate(name=name, message=message, is_active=is_active)
+    session.add(template)
+    session.commit()
+    return template
+
+
+def make_sms_log(
+    session,
+    shop,
+    purchase,
+    customer,
+    status=SMSStatus.FAILED,
+    phone="233240000000",
+    message="Hello",
+):
+    sms_log = SMSLog(
+        shop_id=shop.id,
+        purchase_id=purchase.id,
+        customer_id=customer.id,
+        phone_number=phone,
+        message=message,
+        provider="mock",
+        status=status,
+    )
+    session.add(sms_log)
+    session.commit()
+    return sms_log
