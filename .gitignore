@@ -1,0 +1,15 @@
+# Root-level ignores (each subproject also has its own .gitignore)
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.idea/
+.vscode/
+
+# Secrets / environment (never commit real values)
+.env
+.env.*
+!.env.example
