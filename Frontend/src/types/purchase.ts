@@ -1,4 +1,12 @@
 import type { Customer } from './customer'
+import type { UserRole } from './user'
+
+export interface PurchaseStaff {
+  id: string
+  name: string
+  email: string
+  role: UserRole
+}
 
 export interface Purchase {
   id: string
@@ -11,6 +19,7 @@ export interface Purchase {
   created_at: string | null
   updated_at: string | null
   customer?: Customer
+  staff?: PurchaseStaff
 }
 
 export interface CustomerInput {

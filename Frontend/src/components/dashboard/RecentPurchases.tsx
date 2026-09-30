@@ -35,13 +35,14 @@ export default function RecentPurchases({
           />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[560px] text-sm">
+            <table className="w-full min-w-[640px] text-sm">
               <thead>
                 <tr className="border-b border-slate-200 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                   <th className="pb-2 pr-4 font-semibold">Customer</th>
                   <th className="pb-2 pr-4 font-semibold">Product</th>
                   <th className="pb-2 pr-4 font-semibold">Amount</th>
                   <th className="pb-2 pr-4 font-semibold">Shop</th>
+                  <th className="pb-2 pr-4 font-semibold">Recorded By</th>
                   <th className="pb-2 font-semibold">Date</th>
                 </tr>
               </thead>
@@ -56,6 +57,7 @@ export default function RecentPurchases({
                     <td className="py-2.5 pr-4 text-slate-600">
                       {shopNames.get(purchase.shop_id) ?? '—'}
                     </td>
+                    <td className="py-2.5 pr-4 text-slate-600">{purchase.staff?.name ?? '—'}</td>
                     <td className="py-2.5 text-slate-500">{formatDateTime(purchase.created_at)}</td>
                   </tr>
                 ))}

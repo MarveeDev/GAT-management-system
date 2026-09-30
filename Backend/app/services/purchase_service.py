@@ -169,7 +169,9 @@ def list_purchases(
     page = max(1, page)
     per_page = min(max(1, per_page), 100)
 
-    query = Purchase.query.options(joinedload(Purchase.customer))
+    query = Purchase.query.options(
+        joinedload(Purchase.customer), joinedload(Purchase.staff)
+    )
 
     if actor.role == UserRole.SUPER_ADMIN:
         if shop_id:

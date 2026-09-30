@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import { listAllPurchases, listPurchases } from '../services/purchaseService'
 import { listShops } from '../services/shopService'
@@ -72,6 +72,7 @@ export function useDashboard() {
   const [uniqueCustomers, setUniqueCustomers] = useState<AsyncSection<number>>(emptySection)
   const [recentPurchases, setRecentPurchases] = useState<AsyncSection<Purchase[]>>(emptySection)
   const [chart, setChart] = useState<AsyncSection<ChartPoint[]>>(emptySection)
+  const [reloadToken, setReloadToken] = useState(0)
 
   useEffect(() => {
     let active = true
@@ -147,7 +148,18 @@ export function useDashboard() {
     return () => {
       active = false
     }
-  }, [])
+  }, [reloadToken])
 
-  return { shops, totalPurchases, smsSent, smsFailed, uniqueCustomers, recentPurchases, chart }
+  const refresh = useCallback(() => setReloadToken((token) => token + 1), [])
+
+  return {
+    shops,
+    totalPurchases,
+    smsSent,
+    smsFailed,
+    uniqueCustomers,
+    recentPurchases,
+    chart,
+    refresh,
+  }
 }

@@ -3,18 +3,30 @@ import type { LucideIcon } from 'lucide-react'
 import type { AsyncSection } from '../../types/api'
 import LoadingSpinner from '../LoadingSpinner'
 
+type Accent = 'blue' | 'green' | 'red' | 'purple'
+
+const ACCENT_CLASSES: Record<Accent, string> = {
+  blue: 'bg-brand-50 text-brand-600',
+  green: 'bg-success-50 text-success-600',
+  red: 'bg-danger-50 text-danger-600',
+  purple: 'bg-purple-50 text-purple-600',
+}
+
 interface StatCardProps {
   label: string
   icon: LucideIcon
   section: AsyncSection<number>
+  accent?: Accent
 }
 
-export default function StatCard({ label, icon: Icon, section }: StatCardProps) {
+export default function StatCard({ label, icon: Icon, section, accent = 'blue' }: StatCardProps) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-slate-500">{label}</p>
-        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+        <span
+          className={`flex h-9 w-9 items-center justify-center rounded-lg ${ACCENT_CLASSES[accent]}`}
+        >
           <Icon className="h-5 w-5" aria-hidden="true" />
         </span>
       </div>

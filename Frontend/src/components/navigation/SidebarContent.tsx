@@ -20,7 +20,7 @@ export default function SidebarContent({ onNavigate }: SidebarContentProps) {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-3 px-5 py-5">
+      <div className="flex items-center gap-3 border-b border-white/10 px-5 py-5">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white">
           GAE
         </div>

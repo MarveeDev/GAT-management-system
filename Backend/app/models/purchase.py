@@ -41,6 +41,15 @@ class Purchase(BaseModel):
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
             "customer": self.customer.to_dict() if self.customer else None,
+            "staff": self._staff_dict() if self.staff else None,
+        }
+
+    def _staff_dict(self) -> dict:
+        return {
+            "id": self.staff.id,
+            "name": self.staff.name,
+            "email": self.staff.email,
+            "role": self.staff.role,
         }
 
     def __repr__(self) -> str:

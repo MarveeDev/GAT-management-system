@@ -1,14 +1,22 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 
 import type { PurchaseCreatePayload, Shop } from '../../types'
 import ErrorMessage from '../ErrorMessage'
+
+export interface PurchasePreviewValues {
+  customerName: string
+  product: string
+  amount: string
+  shopName?: string
+}
 
 interface PurchaseFormProps {
   isSuperAdmin: boolean
   activeShops: Shop[]
   assignedShopName: string | null
   onSubmit: (payload: PurchaseCreatePayload) => Promise<void>
-  onCancel: () => void
+  onCancel?: () => void
+  onValuesChange?: (values: PurchasePreviewValues) => void
 }
 
 const inputClass =
@@ -22,6 +30,7 @@ export default function PurchaseForm({
   assignedShopName,
   onSubmit,
   onCancel,
+  onValuesChange,
 }: PurchaseFormProps) {
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
@@ -30,9 +39,24 @@ export default function PurchaseForm({
   const [shopId, setShopId] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const submittingRef = useRef(false)
+
+  const selectedShopName = isSuperAdmin
+    ? activeShops.find((shop) => shop.id === shopId)?.name
+    : assignedShopName ?? undefined
+
+  useEffect(() => {
+    onValuesChange?.({
+      customerName: customerName.trim(),
+      product: product.trim(),
+      amount: amount.trim(),
+      shopName: selectedShopName,
+    })
+  }, [customerName, product, amount, selectedShopName, onValuesChange])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (submittingRef.current) return
 
     const name = customerName.trim()
     if (!name) {
@@ -65,12 +89,20 @@ export default function PurchaseForm({
       payload.shop_id = shopId
     }
 
+    submittingRef.current = true
     setSubmitting(true)
     setError(null)
     try {
       await onSubmit(payload)
+      setCustomerName('')
+      setCustomerPhone('')
+      setProduct('')
+      setAmount('')
+      if (isSuperAdmin) setShopId('')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to record purchase.')
+    } finally {
+      submittingRef.current = false
       setSubmitting(false)
     }
   }
@@ -177,13 +209,15 @@ export default function PurchaseForm({
       <ErrorMessage message={error ?? undefined} title="Unable to record purchase" />
 
       <div className="flex justify-end gap-2 pt-1">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
-        >
-          Cancel
-        </button>
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+          >
+            Cancel
+          </button>
+        )}
         <button
           type="submit"
           disabled={submitting}
@@ -192,7 +226,7 @@ export default function PurchaseForm({
           {submitting && (
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
           )}
-          {submitting ? 'Recording…' : 'Record Purchase'}
+          {submitting ? 'Recording Purchase…' : 'Record Purchase & Send SMS'}
         </button>
       </div>
     </form>

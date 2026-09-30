@@ -19,7 +19,7 @@ export default function PurchaseTable({
 }: PurchaseTableProps) {
   return (
     <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <table className="w-full min-w-[820px] text-sm">
+      <table className="w-full min-w-[920px] text-sm">
         <thead>
           <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
             <th className="px-5 py-3 font-semibold">Date</th>
@@ -28,6 +28,7 @@ export default function PurchaseTable({
             <th className="px-5 py-3 font-semibold">Product</th>
             <th className="px-5 py-3 font-semibold">Amount</th>
             <th className="px-5 py-3 font-semibold">Shop</th>
+            <th className="px-5 py-3 font-semibold">Recorded By</th>
             <th className="px-5 py-3 font-semibold">SMS</th>
             <th className="px-5 py-3 text-right font-semibold">Actions</th>
           </tr>
@@ -47,6 +48,7 @@ export default function PurchaseTable({
               <td className="px-5 py-3 text-slate-600">
                 {shopNames.get(purchase.shop_id) ?? '—'}
               </td>
+              <td className="px-5 py-3 text-slate-600">{purchase.staff?.name ?? '—'}</td>
               <td className="px-5 py-3">
                 <SmsStatusBadge status={smsStatus.get(purchase.id)} />
               </td>

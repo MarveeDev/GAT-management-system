@@ -175,6 +175,35 @@ def test_purchase_stores_authenticated_staff_id(session, client):
     assert resp.get_json()["purchase"]["staff_id"] == staff.id
 
 
+def test_purchase_response_includes_staff_identity(session, client):
+    shop = make_shop(session, "Shop A")
+    staff = make_user(session, UserRole.STAFF, "staff@example.com", shop=shop)
+    token = get_token(client, "staff@example.com")
+
+    resp = post_purchase(client, token, {"customer": customer_payload(), "product": "Rice", "amount": 10})
+    assert resp.status_code == 201
+    body = resp.get_json()["purchase"]
+    assert body["staff"]["id"] == staff.id
+    assert body["staff"]["name"] == "staff"
+    assert body["staff"]["email"] == "staff@example.com"
+    assert body["staff"]["role"] == "STAFF"
+    assert "password" not in body["staff"]
+
+
+def test_purchase_list_includes_staff_identity(session, client):
+    shop = make_shop(session, "Shop A")
+    staff = make_user(session, UserRole.STAFF, "staff@example.com", shop=shop)
+    customer = make_customer(session, "John", "233240000000")
+    make_purchase(session, shop, staff, customer, product="Rice")
+    token = get_token(client, "staff@example.com")
+
+    resp = client.get("/api/purchases", headers=auth_header(token))
+    body = resp.get_json()
+    assert body["purchases"][0]["staff"]["name"] == "staff"
+    assert body["purchases"][0]["staff"]["email"] == "staff@example.com"
+    assert body["purchases"][0]["staff"]["role"] == "STAFF"
+
+
 def test_product_required(session, client):
     shop = make_shop(session, "Shop A")
     make_user(session, UserRole.STAFF, "staff@example.com", shop=shop)
