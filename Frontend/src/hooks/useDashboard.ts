@@ -17,9 +17,10 @@ function emptySection<T>(): AsyncSection<T> {
   return { data: null, loading: true, error: null }
 }
 
-function sevenDaysAgoISO(): string {
+function startOfDayISO(daysAgo: number): string {
   const date = new Date()
-  date.setDate(date.getDate() - 7)
+  date.setDate(date.getDate() - daysAgo)
+  date.setHours(0, 0, 0, 0)
   return date.toISOString()
 }
 
@@ -125,7 +126,7 @@ export function useDashboard() {
         if (active) setRecentPurchases({ data: null, loading: false, error: errorMessage(error) })
       })
 
-    const dateFrom = sevenDaysAgoISO()
+    const dateFrom = startOfDayISO(6)
     Promise.all([
       listPurchases({ date_from: dateFrom, per_page: CHART_PAGE_SIZE }),
       listSmsLogs({ status: 'SENT', date_from: dateFrom, per_page: CHART_PAGE_SIZE }),

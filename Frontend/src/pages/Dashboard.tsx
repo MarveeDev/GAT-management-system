@@ -5,9 +5,11 @@ import QuickActions from '../components/dashboard/QuickActions'
 import RecentPurchases from '../components/dashboard/RecentPurchases'
 import ShopOverview from '../components/dashboard/ShopOverview'
 import StatCard from '../components/dashboard/StatCard'
+import { useAuth } from '../contexts/authContext'
 import { useDashboard } from '../hooks/useDashboard'
 
 export default function Dashboard() {
+  const { user } = useAuth()
   const {
     shops,
     totalPurchases,
@@ -19,14 +21,16 @@ export default function Dashboard() {
   } = useDashboard()
 
   const shopNames = new Map((shops.data ?? []).map((shop) => [shop.id, shop.name]))
+  const subtitle =
+    user?.role === 'SUPER_ADMIN'
+      ? 'Overview of purchases, customers, and SMS activity across all shops.'
+      : 'Overview of purchases, customers, and SMS activity for your assigned shop.'
 
   return (
     <div className="space-y-6">
       <header>
         <h1 className="text-xl font-semibold text-slate-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Overview of purchases, customers, and SMS activity across all shops.
-        </p>
+        <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
       </header>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">

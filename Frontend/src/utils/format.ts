@@ -18,9 +18,15 @@ export function formatCurrency(amount: string | null | undefined, currency = 'GH
   if (amount === null || amount === undefined || amount === '') {
     return `${currency} 0.00`
   }
-  const [whole, fraction] = amount.split('.')
-  const decimals = (fraction ?? '').padEnd(2, '0').slice(0, 2)
-  return `${currency} ${whole}.${decimals}`
+  const value = Number(amount)
+  if (!Number.isFinite(value)) {
+    return `${currency} 0.00`
+  }
+  const formatted = value.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+  return `${currency} ${formatted}`
 }
 
 export function formatDateTime(iso: string | null): string {
