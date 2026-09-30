@@ -15,6 +15,14 @@ def validate_password(password: str) -> bool:
     return bool(password) and len(password) >= MIN_PASSWORD_LENGTH
 
 
+def clean_optional(value) -> str | None:
+    """Return a trimmed string or None for optional string inputs."""
+    if value is None:
+        return None
+    value = str(value).strip()
+    return value or None
+
+
 def validate_shop_assignment(role: str, shop_id: str | None) -> str | None:
     """Return an error message if the role/shop assignment is invalid.
 

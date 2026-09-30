@@ -31,5 +31,17 @@ class Shop(BaseModel):
     sms_logs = db.relationship("SMSLog", back_populates="shop")
     audit_logs = db.relationship("AuditLog", back_populates="shop")
 
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "location": self.location,
+            "phone": self.phone,
+            "sender_id": self.sender_id,
+            "status": self.status,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
     def __repr__(self) -> str:
         return f"<Shop {self.name}>"
