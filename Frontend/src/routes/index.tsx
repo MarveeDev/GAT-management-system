@@ -4,6 +4,7 @@ import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import LoadingSpinner from '../components/LoadingSpinner'
 import { useAuth } from '../contexts/authContext'
 import AppLayout from '../layouts/AppLayout'
+import Customers from '../pages/Customers'
 import Login from '../pages/Login'
 import NotFound from '../pages/NotFound'
 import Placeholder from '../pages/Placeholder'
@@ -69,7 +70,7 @@ export default function AppRoutes() {
           <Route path="/shops" element={<Shops />} />
           <Route path="/staff" element={<Staff />} />
           <Route path="/purchases" element={<Purchases />} />
-          <Route path="/customers" element={<Placeholder title="Customers" />} />
+          <Route path="/customers" element={<Customers />} />
           <Route path="/sms" element={<Placeholder title="SMS" />} />
           <Route path="/reports" element={<Placeholder title="Reports" />} />
         </Route>
