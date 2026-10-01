@@ -105,6 +105,8 @@ def make_sms_log(
     status=SMSStatus.FAILED,
     phone="233240000000",
     message="Hello",
+    created_at=None,
+    error_message=None,
 ):
     sms_log = SMSLog(
         shop_id=shop.id,
@@ -114,6 +116,8 @@ def make_sms_log(
         message=message,
         provider="mock",
         status=status,
+        created_at=created_at,
+        error_message=error_message,
     )
     session.add(sms_log)
     session.commit()

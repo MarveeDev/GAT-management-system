@@ -329,3 +329,79 @@ def get_sales(shop_ids, start, end, page: int = 1, per_page: int = 25) -> dict:
         },
         "range": _range_dict(start, end),
     }
+
+
+def _success_rate_str(sent: int, total: int) -> str:
+    """Return the provider-accepted success rate as a 2-decimal string.
+
+    ``0.00`` is returned when there are no SMS records (avoids divide-by-zero).
+    """
+    if not total:
+        return "0.00"
+    rate = (Decimal(sent) / Decimal(total) * Decimal(100)).quantize(
+        _MONEY_QUANT, rounding=ROUND_HALF_UP
+    )
+    return format(rate, "f")
+
+
+def _sms_row(sms_log) -> dict:
+    customer = sms_log.customer
+    shop = sms_log.shop
+    return {
+        "id": sms_log.id,
+        "date": sms_log.created_at.isoformat() if sms_log.created_at else None,
+        "phone_number": sms_log.phone_number,
+        "status": sms_log.status,
+        "provider": sms_log.provider,
+        "shop": {"id": shop.id, "name": shop.name} if shop else None,
+        "customer": {
+            "id": customer.id,
+            "name": customer.name,
+            "phone": customer.phone,
+        }
+        if customer
+        else None,
+        "purchase_id": sms_log.purchase_id,
+        "error_message": sms_log.error_message,
+    }
+
+
+def get_sms_report(shop_ids, start, end, page: int = 1, per_page: int = 25) -> dict:
+    """Return the paginated SMS report for the given scope and date range.
+
+    The summary covers the entire scope (not just the current page) and is
+    computed with SQL aggregates. Only the current page of rows is loaded.
+    """
+    base = _scoped_sms_query(shop_ids, start, end)
+    total_sms = base.count()
+    sms_sent = base.filter(SMSLog.status == SMSStatus.SENT).count()
+    sms_failed = base.filter(SMSLog.status == SMSStatus.FAILED).count()
+    sms_pending = base.filter(SMSLog.status == SMSStatus.PENDING).count()
+
+    pages = (total_sms + per_page - 1) // per_page
+
+    logs = (
+        base.options(joinedload(SMSLog.customer), joinedload(SMSLog.shop))
+        .order_by(SMSLog.created_at.desc(), SMSLog.id.desc())
+        .offset((page - 1) * per_page)
+        .limit(per_page)
+        .all()
+    )
+
+    return {
+        "summary": {
+            "total_sms": total_sms,
+            "sms_sent": sms_sent,
+            "sms_failed": sms_failed,
+            "sms_pending": sms_pending,
+            "success_rate": _success_rate_str(sms_sent, total_sms),
+        },
+        "sms": [_sms_row(log) for log in logs],
+        "pagination": {
+            "page": page,
+            "per_page": per_page,
+            "total": total_sms,
+            "pages": pages,
+        },
+        "range": _range_dict(start, end),
+    }
