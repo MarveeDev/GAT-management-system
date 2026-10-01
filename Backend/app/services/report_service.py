@@ -9,7 +9,7 @@ from app.extensions import db
 from app.models.purchase import Purchase
 from app.models.shop import Shop
 from app.models.sms_log import SMSLog, SMSStatus
-from app.models.user import UserRole
+from app.models.user import User, UserRole
 
 # Africa/Accra is UTC+0 and does not observe daylight saving time, so the
 # reporting timezone is identical to UTC. All report date boundaries are
@@ -511,5 +511,84 @@ def get_shop_performance(shop_ids, start, end) -> dict:
     return {
         "shops": shops_data,
         "totals": totals,
+        "range": _range_dict(start, end),
+    }
+
+
+def get_staff_activity(shop_ids, start, end) -> dict:
+    """Return per-staff purchase activity for the given scope and date range.
+
+    Purchases are grouped by the authenticated recorder (``staff_id``) and the
+    shop they were recorded in. Aggregation happens in the database; only the
+    distinct staff/shop records referenced by the groups are loaded.
+
+    Staff members with no purchases in the selected range are intentionally
+    omitted — this is an activity report, not a full staff directory.
+    """
+    base = _scoped_purchase_query(shop_ids, start, end)
+
+    total_purchases = base.count()
+    total_sales = _money(base.with_entities(func.sum(Purchase.amount)).scalar())
+
+    rows = (
+        base.with_entities(
+            Purchase.staff_id,
+            Purchase.shop_id,
+            func.count(Purchase.id),
+            func.sum(Purchase.amount),
+        )
+        .group_by(Purchase.staff_id, Purchase.shop_id)
+        .all()
+    )
+
+    staff_ids = {row[0] for row in rows}
+    shop_id_set = {row[1] for row in rows}
+
+    users = {
+        u.id: u for u in User.query.filter(User.id.in_(staff_ids)).all()
+    } if staff_ids else {}
+    shops = {
+        s.id: s for s in Shop.query.filter(Shop.id.in_(shop_id_set)).all()
+    } if shop_id_set else {}
+
+    staff_data = []
+    for staff_id, shop_id, count, sum_amount in rows:
+        user = users.get(staff_id)
+        if user is None:
+            continue
+        shop = shops.get(shop_id)
+        sales = _money(sum_amount)
+        average = (sales / count).quantize(_MONEY_QUANT, rounding=ROUND_HALF_UP)
+        staff_data.append(
+            {
+                "staff": {
+                    "id": user.id,
+                    "name": user.name,
+                    "email": user.email,
+                    "role": user.role,
+                },
+                "shop": _shop_info(shop) if shop else None,
+                "metrics": {
+                    "total_purchases": count,
+                    "total_sales": _money_str(sales),
+                    "average_purchase_value": _money_str(average),
+                },
+            }
+        )
+
+    staff_data.sort(
+        key=lambda row: (
+            -row["metrics"]["total_purchases"],
+            row["staff"]["name"].lower(),
+            row["staff"]["id"],
+        )
+    )
+
+    return {
+        "staff": staff_data,
+        "totals": {
+            "total_purchases": total_purchases,
+            "total_sales": _money_str(total_sales),
+        },
         "range": _range_dict(start, end),
     }
