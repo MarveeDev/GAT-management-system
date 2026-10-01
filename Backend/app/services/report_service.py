@@ -3,6 +3,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from uuid import UUID
 
 from sqlalchemy import func
+from sqlalchemy.orm import joinedload
 
 from app.extensions import db
 from app.models.purchase import Purchase
@@ -201,6 +202,13 @@ def _money_str(value: Decimal) -> str:
     return format(value.quantize(_MONEY_QUANT, rounding=ROUND_HALF_UP), "f")
 
 
+def _range_dict(start, end) -> dict:
+    return {
+        "start": start.isoformat() if start is not None else None,
+        "end": end.isoformat() if end is not None else None,
+    }
+
+
 def get_summary(shop_ids, start, end) -> dict:
     """Aggregate the overview metrics for the given scope and date range.
 
@@ -229,10 +237,7 @@ def get_summary(shop_ids, start, end) -> dict:
         )
 
     return {
-        "range": {
-            "start": start.isoformat() if start is not None else None,
-            "end": end.isoformat() if end is not None else None,
-        },
+        "range": _range_dict(start, end),
         "total_purchases": total_purchases,
         "total_sales": _money_str(total_sales),
         "average_purchase_value": (
@@ -244,4 +249,83 @@ def get_summary(shop_ids, start, end) -> dict:
         "sms_sent": sms_sent,
         "sms_failed": sms_failed,
         "sms_pending": sms_pending,
+    }
+
+
+def _sales_row(purchase) -> dict:
+    customer = purchase.customer
+    shop = purchase.shop
+    staff = purchase.staff
+    return {
+        "id": purchase.id,
+        "date": purchase.created_at.isoformat() if purchase.created_at else None,
+        "customer": {
+            "id": customer.id,
+            "name": customer.name,
+            "phone": customer.phone,
+        }
+        if customer
+        else None,
+        "product": purchase.product,
+        "amount": _money_str(_money(purchase.amount)),
+        "currency": purchase.currency,
+        "shop": {"id": shop.id, "name": shop.name} if shop else None,
+        "recorded_by": {
+            "id": staff.id,
+            "name": staff.name,
+            "email": staff.email,
+            "role": staff.role,
+        }
+        if staff
+        else None,
+    }
+
+
+def get_sales(shop_ids, start, end, page: int = 1, per_page: int = 25) -> dict:
+    """Return the paginated sales report for the given scope and date range.
+
+    The summary reflects the entire scope (not just the current page). All
+    aggregation is performed in the database; only the current page of rows is
+    loaded into Python.
+    """
+    base = _scoped_purchase_query(shop_ids, start, end)
+    total = base.count()
+
+    total_sales = _money(base.with_entities(func.sum(Purchase.amount)).scalar())
+    average = None
+    if total:
+        average = (total_sales / total).quantize(
+            _MONEY_QUANT, rounding=ROUND_HALF_UP
+        )
+
+    pages = (total + per_page - 1) // per_page
+
+    purchases = (
+        base.options(
+            joinedload(Purchase.customer),
+            joinedload(Purchase.staff),
+            joinedload(Purchase.shop),
+        )
+        .order_by(Purchase.created_at.desc(), Purchase.id.desc())
+        .offset((page - 1) * per_page)
+        .limit(per_page)
+        .all()
+    )
+
+    return {
+        "sales": [_sales_row(p) for p in purchases],
+        "pagination": {
+            "page": page,
+            "per_page": per_page,
+            "total": total,
+            "pages": pages,
+        },
+        "summary": {
+            "total_purchases": total,
+            "total_sales": _money_str(total_sales),
+            "average_purchase_value": (
+                _money_str(average) if average is not None else None
+            ),
+        },
+        "range": _range_dict(start, end),
     }
