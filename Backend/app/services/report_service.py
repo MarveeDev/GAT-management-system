@@ -405,3 +405,111 @@ def get_sms_report(shop_ids, start, end, page: int = 1, per_page: int = 25) -> d
         },
         "range": _range_dict(start, end),
     }
+
+
+def _shop_info(shop) -> dict:
+    return {
+        "id": shop.id,
+        "name": shop.name,
+        "location": shop.location,
+        "status": shop.status,
+    }
+
+
+def get_shop_performance(shop_ids, start, end) -> dict:
+    """Return per-shop performance metrics plus overall totals.
+
+    Every shop in the authorized scope is returned (including inactive or
+    empty shops) with zero-valued metrics when it has no activity. Aggregation
+    is performed in the database with GROUP BY; no purchase/SMS rows are
+    loaded into Python.
+    """
+    if shop_ids is None:
+        shops = Shop.query.order_by(Shop.name).all()
+    else:
+        shops = (
+            Shop.query.filter(Shop.id.in_(shop_ids)).order_by(Shop.name).all()
+        )
+
+    purchase_query = _scoped_purchase_query(shop_ids, start, end)
+    purchase_rows = (
+        purchase_query.with_entities(
+            Purchase.shop_id,
+            func.count(Purchase.id),
+            func.sum(Purchase.amount),
+            func.count(func.distinct(Purchase.customer_id)),
+        )
+        .group_by(Purchase.shop_id)
+        .all()
+    )
+    purchase_by_shop = {row[0]: row for row in purchase_rows}
+
+    sms_query = _scoped_sms_query(shop_ids, start, end)
+    sms_rows = (
+        sms_query.with_entities(
+            SMSLog.shop_id, SMSLog.status, func.count(SMSLog.id)
+        )
+        .group_by(SMSLog.shop_id, SMSLog.status)
+        .all()
+    )
+    sms_by_shop: dict[str, dict[str, int]] = {}
+    for shop_id, status, count in sms_rows:
+        sms_by_shop.setdefault(shop_id, {})[status] = count
+
+    shops_data = []
+    for shop in shops:
+        prow = purchase_by_shop.get(shop.id)
+        count = prow[1] if prow else 0
+        sales = _money(prow[2]) if prow else Decimal("0")
+        distinct = prow[3] if prow else 0
+
+        if count:
+            average = (sales / count).quantize(
+                _MONEY_QUANT, rounding=ROUND_HALF_UP
+            )
+        else:
+            average = Decimal("0")
+
+        statuses = sms_by_shop.get(shop.id, {})
+        sent = statuses.get(SMSStatus.SENT, 0)
+        failed = statuses.get(SMSStatus.FAILED, 0)
+        pending = statuses.get(SMSStatus.PENDING, 0)
+
+        shops_data.append(
+            {
+                "shop": _shop_info(shop),
+                "metrics": {
+                    "total_purchases": count,
+                    "total_sales": _money_str(sales),
+                    "average_purchase_value": _money_str(average),
+                    "unique_customers": distinct,
+                    "sms_sent": sent,
+                    "sms_failed": failed,
+                    "sms_pending": pending,
+                    "sms_success_rate": _success_rate_str(
+                        sent, sent + failed + pending
+                    ),
+                },
+            }
+        )
+
+    totals = {
+        "total_purchases": purchase_query.count(),
+        "total_sales": _money_str(
+            _money(
+                purchase_query.with_entities(func.sum(Purchase.amount)).scalar()
+            )
+        ),
+        "unique_customers": purchase_query.with_entities(
+            func.count(func.distinct(Purchase.customer_id))
+        ).scalar(),
+        "sms_sent": sms_query.filter(SMSLog.status == SMSStatus.SENT).count(),
+        "sms_failed": sms_query.filter(SMSLog.status == SMSStatus.FAILED).count(),
+        "sms_pending": sms_query.filter(SMSLog.status == SMSStatus.PENDING).count(),
+    }
+
+    return {
+        "shops": shops_data,
+        "totals": totals,
+        "range": _range_dict(start, end),
+    }
