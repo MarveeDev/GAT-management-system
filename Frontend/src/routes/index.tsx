@@ -7,8 +7,8 @@ import AppLayout from '../layouts/AppLayout'
 import Customers from '../pages/Customers'
 import Login from '../pages/Login'
 import NotFound from '../pages/NotFound'
-import Placeholder from '../pages/Placeholder'
 import Purchases from '../pages/Purchases'
+import Reports from '../pages/Reports'
 import Shops from '../pages/Shops'
 import Sms from '../pages/Sms'
 import Staff from '../pages/Staff'
@@ -73,7 +73,7 @@ export default function AppRoutes() {
           <Route path="/purchases" element={<Purchases />} />
           <Route path="/customers" element={<Customers />} />
           <Route path="/sms" element={<Sms />} />
-          <Route path="/reports" element={<Placeholder title="Reports" />} />
+          <Route path="/reports" element={<Reports />} />
         </Route>
       </Route>
 
