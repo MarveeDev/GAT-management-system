@@ -144,6 +144,39 @@ def test_summary_date_filter(session, client):
     assert summary["total_sales"] == "200.00"
 
 
+def test_summary_half_open_date_boundaries(session, client):
+    token = super_admin_token(session, client)
+    shop = make_shop(session, "Shop A")
+    staff = make_user(session, UserRole.STAFF, "staff@example.com", shop=shop)
+    customer = make_customer(session, "Customer", "233240000001")
+
+    # Exact start boundary — inclusive.
+    make_purchase(
+        session, shop, staff, customer, product="start",
+        created_at=datetime(2026, 9, 5, 0, 0, 0),
+    )
+    # Just before start — excluded.
+    make_purchase(
+        session, shop, staff, customer, product="before",
+        created_at=datetime(2026, 9, 4, 23, 59, 59),
+    )
+    # End of the final day — inclusive.
+    make_purchase(
+        session, shop, staff, customer, product="end",
+        created_at=datetime(2026, 9, 20, 23, 59, 59),
+    )
+    # Exact end boundary — exclusive.
+    make_purchase(
+        session, shop, staff, customer, product="after",
+        created_at=datetime(2026, 9, 21, 0, 0, 0),
+    )
+
+    summary = _summary(
+        client, token, "?date_from=2026-09-05&date_to=2026-09-20"
+    ).get_json()["summary"]
+    assert summary["total_purchases"] == 2
+
+
 def test_summary_invalid_date_range(session, client):
     token = super_admin_token(session, client)
     resp = _summary(client, token, "?date_from=2026-10-01&date_to=2026-09-01")

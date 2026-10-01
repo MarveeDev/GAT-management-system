@@ -176,6 +176,41 @@ def test_staff_no_secrets(session, client):
     assert "api_key" not in text
 
 
+def test_staff_inactive_still_reported(session, client):
+    token = super_admin_token(session, client)
+    shop = make_shop(session, "Shop A")
+    staff = make_user(session, UserRole.STAFF, "staff@example.com", shop=shop)
+    customer = make_customer(session, "Customer", "233240000001")
+    make_purchase(session, shop, staff, customer, amount=Decimal("100.00"))
+
+    staff.status = "INACTIVE"
+    session.commit()
+
+    data = _staff_report(client, token).get_json()
+    entry = _staff_by_id(data, staff.id)
+    assert entry is not None
+    assert entry["metrics"]["total_purchases"] == 1
+
+
+def test_staff_moved_shop_attribution(session, client):
+    token = super_admin_token(session, client)
+    shop_a = make_shop(session, "Shop A")
+    shop_b = make_shop(session, "Shop B")
+    staff = make_user(session, UserRole.STAFF, "staff@example.com", shop=shop_a)
+    customer = make_customer(session, "Customer", "233240000001")
+    make_purchase(session, shop_a, staff, customer, amount=Decimal("100.00"))
+
+    staff.shop_id = shop_b.id
+    session.commit()
+    make_purchase(session, shop_b, staff, customer, product="Oil", amount=Decimal("200.00"))
+
+    data = _staff_report(client, token).get_json()
+    entries = [e for e in data["staff"] if e["staff"]["id"] == staff.id]
+    assert len(entries) == 2
+    by_shop = {e["shop"]["id"]: e["metrics"]["total_purchases"] for e in entries}
+    assert by_shop == {shop_a.id: 1, shop_b.id: 1}
+
+
 # --- date range ---
 
 
