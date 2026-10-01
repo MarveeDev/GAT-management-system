@@ -6,6 +6,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 
 from app.extensions import db
+from app.models.customer import Customer
 from app.models.purchase import Purchase
 from app.models.shop import Shop
 from app.models.sms_log import SMSLog, SMSStatus
@@ -589,6 +590,112 @@ def get_staff_activity(shop_ids, start, end) -> dict:
         "totals": {
             "total_purchases": total_purchases,
             "total_sales": _money_str(total_sales),
+        },
+        "range": _range_dict(start, end),
+    }
+
+
+def get_customer_report(shop_ids, start, end) -> dict:
+    """Return per-customer purchase activity for the given scope and date range.
+
+    Customers are global entities, so the same customer is aggregated across
+    all authorized shops. Purchases are grouped by ``(customer_id, shop_id)``
+    in the database; customer and shop records are loaded in bulk by id. No
+    purchase rows are loaded into Python.
+    """
+    base = _scoped_purchase_query(shop_ids, start, end)
+
+    total_purchases = base.count()
+    total_spent = _money(base.with_entities(func.sum(Purchase.amount)).scalar())
+    total_customers = base.with_entities(
+        func.count(func.distinct(Purchase.customer_id))
+    ).scalar()
+
+    rows = (
+        base.with_entities(
+            Purchase.customer_id,
+            Purchase.shop_id,
+            func.count(Purchase.id),
+            func.sum(Purchase.amount),
+        )
+        .group_by(Purchase.customer_id, Purchase.shop_id)
+        .all()
+    )
+
+    customer_ids = {row[0] for row in rows}
+    shop_id_set = {row[1] for row in rows}
+
+    customers = (
+        {c.id: c for c in Customer.query.filter(Customer.id.in_(customer_ids)).all()}
+        if customer_ids
+        else {}
+    )
+    shops = (
+        {s.id: s for s in Shop.query.filter(Shop.id.in_(shop_id_set)).all()}
+        if shop_id_set
+        else {}
+    )
+
+    per_customer: dict[str, dict] = {}
+    for customer_id, shop_id, count, sum_amount in rows:
+        entry = per_customer.setdefault(
+            customer_id,
+            {"count": 0, "spent": Decimal("0"), "shop_ids": set()},
+        )
+        entry["count"] += count
+        entry["spent"] += _money(sum_amount)
+        entry["shop_ids"].add(shop_id)
+
+    customers_data = []
+    for customer_id, entry in per_customer.items():
+        customer = customers.get(customer_id)
+        if customer is None:
+            continue
+        count = entry["count"]
+        spent = entry["spent"]
+        average = (spent / count).quantize(_MONEY_QUANT, rounding=ROUND_HALF_UP)
+
+        customer_shops = sorted(
+            (
+                _shop_info(shops[sid])
+                for sid in entry["shop_ids"]
+                if sid in shops
+            ),
+            key=lambda s: s["name"],
+        )
+
+        customers_data.append(
+            {
+                "customer": {
+                    "id": customer.id,
+                    "name": customer.name,
+                    "phone": customer.phone,
+                    "email": customer.email,
+                },
+                "shops": customer_shops,
+                "metrics": {
+                    "total_purchases": count,
+                    "total_spent": _money_str(spent),
+                    "average_purchase_value": _money_str(average),
+                },
+            }
+        )
+
+    customers_data.sort(
+        key=lambda row: (
+            -row["metrics"]["total_purchases"],
+            -Decimal(row["metrics"]["total_spent"]),
+            row["customer"]["name"].lower(),
+            row["customer"]["id"],
+        )
+    )
+
+    return {
+        "customers": customers_data,
+        "totals": {
+            "total_customers": total_customers,
+            "total_purchases": total_purchases,
+            "total_spent": _money_str(total_spent),
         },
         "range": _range_dict(start, end),
     }
