@@ -397,6 +397,8 @@ export default function Products() {
             key={editingProduct?.id ?? 'new'}
             initial={editingProduct ?? undefined}
             shops={activeShops}
+            stockByShop={editingProduct ? inventoryByProduct.get(editingProduct.id) : undefined}
+            initialShopId={editingProduct && viewShopId !== 'ALL' ? viewShopId : undefined}
             onSubmit={editingProduct ? handleEdit : handleCreate}
             onCancel={closeForm}
           />

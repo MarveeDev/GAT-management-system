@@ -20,6 +20,8 @@ export interface ProductFormValues {
 interface ProductFormProps {
   initial?: Product
   shops?: Shop[]
+  stockByShop?: Map<string, number>
+  initialShopId?: string
   onSubmit: (values: ProductFormValues) => Promise<void>
   onCancel: () => void
 }
@@ -37,7 +39,14 @@ function validatePrice(value: string, label: string): string | null {
   return null
 }
 
-export default function ProductForm({ initial, shops, onSubmit, onCancel }: ProductFormProps) {
+export default function ProductForm({
+  initial,
+  shops,
+  stockByShop,
+  initialShopId,
+  onSubmit,
+  onCancel,
+}: ProductFormProps) {
   const isEdit = initial !== undefined
 
   const [name, setName] = useState(initial?.name ?? '')
@@ -45,6 +54,7 @@ export default function ProductForm({ initial, shops, onSubmit, onCancel }: Prod
   const [minimumPrice, setMinimumPrice] = useState(initial?.minimum_price ?? '')
   const [maximumPrice, setMaximumPrice] = useState(initial?.maximum_price ?? '')
   const [status, setStatus] = useState<ProductStatus>(initial?.status ?? 'ACTIVE')
+  const [selectedShopId, setSelectedShopId] = useState(initialShopId ?? '')
   const [stockValues, setStockValues] = useState<Record<string, string>>(() => {
     const values: Record<string, string> = {}
     for (const shop of shops ?? []) values[shop.id] = '0'
@@ -80,6 +90,11 @@ export default function ProductForm({ initial, shops, onSubmit, onCancel }: Prod
 
     if (Number(minimumPrice.trim()) > Number(maximumPrice.trim())) {
       setError('Minimum price must not exceed maximum price.')
+      return
+    }
+
+    if (isEdit && !selectedShopId) {
+      setError('Please select a branch.')
       return
     }
 
@@ -145,6 +160,35 @@ export default function ProductForm({ initial, shops, onSubmit, onCancel }: Prod
           placeholder="e.g. Audio & Accessories"
         />
       </div>
+
+      {isEdit && (
+        <div>
+          <label htmlFor="product-branch" className="block text-sm font-medium text-slate-700">
+            Branch <span className="text-danger-600">*</span>
+          </label>
+          <select
+            id="product-branch"
+            value={selectedShopId}
+            onChange={(event) => setSelectedShopId(event.target.value)}
+            className={inputClass}
+          >
+            <option value="">Select a branch…</option>
+            {shops?.map((shop) => (
+              <option key={shop.id} value={shop.id}>
+                {shop.name}
+              </option>
+            ))}
+          </select>
+          {selectedShopId && (
+            <p className="mt-2 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
+              Current Stock:{' '}
+              <span className="font-semibold text-slate-900">
+                {stockByShop?.get(selectedShopId) ?? 0} units
+              </span>
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <div>
