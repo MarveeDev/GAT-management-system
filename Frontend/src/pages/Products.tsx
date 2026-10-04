@@ -42,6 +42,7 @@ export default function Products() {
   const [adjustProduct, setAdjustProduct] = useState<Product | null>(null)
 
   const [success, setSuccess] = useState<string | null>(null)
+  const [warning, setWarning] = useState<string | null>(null)
 
   const viewShopId = isSuperAdmin ? selectedShopId : (user?.shop_id ?? '')
 
@@ -91,6 +92,12 @@ export default function Products() {
     const timer = setTimeout(() => setSuccess(null), 4000)
     return () => clearTimeout(timer)
   }, [success])
+
+  useEffect(() => {
+    if (!warning) return
+    const timer = setTimeout(() => setWarning(null), 6000)
+    return () => clearTimeout(timer)
+  }, [warning])
 
   const inventoryByProduct = useMemo(() => {
     const map = new Map<string, Map<string, number>>()
@@ -163,6 +170,10 @@ export default function Products() {
     [shops, isSuperAdmin, user?.shop_id],
   )
 
+  const activeShops = useMemo(() => shops.filter((shop) => shop.status === 'ACTIVE'), [shops])
+
+  const shopNames = useMemo(() => new Map(shops.map((shop) => [shop.id, shop.name])), [shops])
+
   function openCreate() {
     setEditingProduct(null)
     setFormOpen(true)
@@ -185,16 +196,41 @@ export default function Products() {
   }
 
   async function handleCreate(values: ProductFormValues) {
-    await createProduct({
+    const res = await createProduct({
       name: values.name,
       category: values.category || undefined,
       minimum_price: values.minimum_price,
       maximum_price: values.maximum_price,
       status: values.status,
     })
-    setSuccess('Product created successfully.')
+    const productId = res.product.id
+
+    const stockEntries = (values.initial_stock ?? []).filter((entry) => entry.quantity > 0)
+    const failedShops: string[] = []
+    for (const entry of stockEntries) {
+      try {
+        await setInventory({
+          product_id: productId,
+          shop_id: entry.shop_id,
+          quantity: entry.quantity,
+        })
+      } catch {
+        failedShops.push(shopNames.get(entry.shop_id) ?? entry.shop_id)
+      }
+    }
+
     closeForm()
     setReloadToken((t) => t + 1)
+
+    if (failedShops.length > 0) {
+      setWarning(
+        `Product created, but initial stock could not be set for: ${failedShops.join(', ')}.`,
+      )
+    } else if (stockEntries.length > 0) {
+      setSuccess('Product created successfully. Initial stock has been set for all selected shops.')
+    } else {
+      setSuccess('Product created successfully.')
+    }
   }
 
   async function handleEdit(values: ProductFormValues) {
@@ -260,6 +296,15 @@ export default function Products() {
           className="rounded-lg border border-success-600/20 bg-success-50 px-4 py-3 text-sm text-success-700"
         >
           {success}
+        </div>
+      )}
+
+      {warning && (
+        <div
+          role="status"
+          className="rounded-lg border border-warning-500/30 bg-warning-50 px-4 py-3 text-sm text-slate-700"
+        >
+          {warning}
         </div>
       )}
 
@@ -351,6 +396,7 @@ export default function Products() {
           <ProductForm
             key={editingProduct?.id ?? 'new'}
             initial={editingProduct ?? undefined}
+            shops={activeShops}
             onSubmit={editingProduct ? handleEdit : handleCreate}
             onCancel={closeForm}
           />
