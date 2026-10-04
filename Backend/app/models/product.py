@@ -37,6 +37,7 @@ class Product(BaseModel):
 
     inventories = db.relationship("ShopInventory", back_populates="product")
     movements = db.relationship("StockMovement", back_populates="product")
+    purchases = db.relationship("Purchase", back_populates="product_ref")
 
     def to_dict(self) -> dict:
         return {

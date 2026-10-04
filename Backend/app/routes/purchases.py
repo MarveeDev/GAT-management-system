@@ -7,7 +7,7 @@ from app.utils.auth import get_current_user, roles_required
 
 purchases_bp = Blueprint("purchases", __name__)
 
-PURCHASE_FIELDS = {"shop_id", "customer_id", "customer", "product", "amount", "currency"}
+PURCHASE_FIELDS = {"shop_id", "customer_id", "customer", "product", "product_id", "quantity", "unit_price", "amount", "currency"}
 
 
 def _parse_body():
