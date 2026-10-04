@@ -84,7 +84,7 @@ export default function ProductFilters({
             onChange={(event) => onStockChange(event.target.value as StockFilter)}
             className={selectClass}
           >
-            <option value="ALL">All stock</option>
+            <option value="ALL">All Stock</option>
             <option value="IN_STOCK">In Stock</option>
             <option value="LOW_STOCK">Low Stock</option>
             <option value="OUT_OF_STOCK">Out of Stock</option>
@@ -94,7 +94,7 @@ export default function ProductFilters({
         {showStatusFilter && (
           <div>
             <label htmlFor="product-status-filter" className="mb-1 block text-xs font-medium text-slate-500">
-              Status
+              Product Status
             </label>
             <select
               id="product-status-filter"

@@ -61,9 +61,12 @@ export default function ProductTable({
                 <th className="px-5 py-3 font-semibold">Total</th>
               </>
             ) : (
-              <th className="px-5 py-3 font-semibold">Stock</th>
+              <>
+                <th className="px-5 py-3 font-semibold">Stock</th>
+                <th className="px-5 py-3 font-semibold">Availability</th>
+              </>
             )}
-            <th className="px-5 py-3 font-semibold">Status</th>
+            <th className="px-5 py-3 font-semibold">Product Status</th>
             {showActions && (
               <th className="px-5 py-3 text-right font-semibold">Actions</th>
             )}
@@ -73,6 +76,7 @@ export default function ProductTable({
           {products.map((product) => {
             const byShop = inventoryByProduct.get(product.id)
             const total = totalStock(product.id, inventoryByProduct)
+            const shopQuantity = byShop?.get(selectedShopId) ?? 0
             return (
               <tr key={product.id} className="border-b border-slate-100 last:border-0">
                 <td className="px-5 py-3 font-medium text-slate-900">{product.name}</td>
@@ -86,27 +90,25 @@ export default function ProductTable({
                     {shops.map((shop) => {
                       const quantity = byShop?.get(shop.id) ?? 0
                       return (
-                        <td key={shop.id} className={`px-5 py-3 font-medium ${quantityColor(quantity)}`}>
-                          {quantity}
+                        <td key={shop.id} className="px-5 py-3">
+                          <div className="flex flex-col items-start gap-1">
+                            <span className={`font-medium ${quantityColor(quantity)}`}>{quantity}</span>
+                            <StockBadge quantity={quantity} />
+                          </div>
                         </td>
                       )
                     })}
-                    <td className="px-5 py-3">
-                      <div className="flex items-center gap-2">
-                        <span className={`font-medium ${quantityColor(total)}`}>{total}</span>
-                        <StockBadge quantity={total} />
-                      </div>
-                    </td>
+                    <td className={`px-5 py-3 font-medium ${quantityColor(total)}`}>{total}</td>
                   </>
                 ) : (
-                  <td className="px-5 py-3">
-                    <div className="flex items-center gap-2">
-                      <span className={`font-medium ${quantityColor(byShop?.get(selectedShopId) ?? 0)}`}>
-                        {byShop?.get(selectedShopId) ?? 0}
-                      </span>
-                      <StockBadge quantity={byShop?.get(selectedShopId) ?? 0} />
-                    </div>
-                  </td>
+                  <>
+                    <td className={`px-5 py-3 font-medium ${quantityColor(shopQuantity)}`}>
+                      {shopQuantity}
+                    </td>
+                    <td className="px-5 py-3">
+                      <StockBadge quantity={shopQuantity} />
+                    </td>
+                  </>
                 )}
 
                 <td className="px-5 py-3">
