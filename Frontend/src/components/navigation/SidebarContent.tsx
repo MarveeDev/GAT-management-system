@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 
 import { NAV_GROUPS } from '../../config/navigation'
+import { BRAND_NAME } from '../../config/branding'
 import { useAuth } from '../../contexts/authContext'
 import { formatRole, shopScopeLabel } from '../../utils/format'
 
@@ -22,11 +23,11 @@ export default function SidebarContent({ onNavigate }: SidebarContentProps) {
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-3 border-b border-white/10 px-5 py-5">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white">
-          GAE
+          {BRAND_NAME}
         </div>
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold leading-tight text-white">
-            Great Alexender Enterprise
+            {BRAND_NAME}
           </p>
           <p className="text-xs text-white/60">Management System</p>
         </div>

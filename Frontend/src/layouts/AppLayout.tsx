@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { Bell, ChevronDown, Menu, Search, X } from 'lucide-react'
 
 import SidebarContent from '../components/navigation/SidebarContent'
+import { BRAND_NAME } from '../config/branding'
 import { useAuth } from '../contexts/authContext'
 import { formatRole } from '../utils/format'
 
@@ -69,10 +70,10 @@ export default function AppLayout() {
             </button>
             <div className="flex items-center gap-2 md:hidden">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-xs font-bold text-white">
-                GAE
+                {BRAND_NAME}
               </div>
               <span className="truncate text-sm font-semibold text-slate-900">
-                Great Alexender Enterprise
+                {BRAND_NAME}
               </span>
             </div>
 

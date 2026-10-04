@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import ErrorMessage from '../components/ErrorMessage'
+import { BRAND_NAME } from '../config/branding'
 import { useAuth } from '../contexts/authContext'
 
 const CURRENT_YEAR = new Date().getFullYear()
@@ -42,24 +43,24 @@ export default function Login() {
       <div className="hidden flex-1 flex-col justify-between bg-navy-900 p-10 text-white lg:flex">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600 text-base font-bold">
-            GAE
+            {BRAND_NAME}
           </div>
           <div>
-            <p className="text-lg font-semibold leading-tight">Great Alexender Enterprise</p>
+            <p className="text-lg font-semibold leading-tight">{BRAND_NAME}</p>
             <p className="text-sm text-white/60">Centralized Management System</p>
           </div>
         </div>
-        <p className="text-sm text-white/50">© {CURRENT_YEAR} Great Alexender Enterprise</p>
+        <p className="text-sm text-white/50">© {CURRENT_YEAR} {BRAND_NAME}</p>
       </div>
 
       <div className="flex flex-1 items-center justify-center bg-slate-50 px-6 py-12">
         <div className="w-full max-w-md">
           <div className="mb-8 flex items-center justify-center gap-3 lg:hidden">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600 text-base font-bold text-white">
-              GAE
+              {BRAND_NAME}
             </div>
             <div>
-              <p className="text-lg font-semibold text-navy-900">Great Alexender Enterprise</p>
+              <p className="text-lg font-semibold text-navy-900">{BRAND_NAME}</p>
               <p className="text-xs text-slate-500">Centralized Management System</p>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import { MessageSquare } from 'lucide-react'
 
+import { BRAND_NAME } from '../../config/branding'
 import type { PurchasePreviewValues } from '../purchases/PurchaseForm'
 import { formatCurrency } from '../../utils/format'
 
@@ -36,11 +37,11 @@ export default function MessagePreview({ values }: MessagePreviewProps) {
           <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
             <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50 px-4 py-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">
-                GAE
+                {BRAND_NAME}
               </div>
               <div className="min-w-0">
                 <p className="truncate text-xs font-semibold text-slate-900">
-                  Great Alexender Enterprise
+                  {BRAND_NAME}
                 </p>
                 <p className="text-[10px] text-slate-400">SMS</p>
               </div>
