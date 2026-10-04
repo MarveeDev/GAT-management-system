@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import {
   BarChart3,
+  Boxes,
   LayoutDashboard,
   MessageSquare,
   ShoppingCart,
@@ -36,6 +37,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Shops', path: '/shops', icon: Store, roles: ['SUPER_ADMIN'] },
       { label: 'Staff', path: '/staff', icon: Users, roles: MANAGER_AND_ADMIN },
       { label: 'Purchases', path: '/purchases', icon: ShoppingCart, roles: ALL_ROLES },
+      { label: 'Products & Inventory', path: '/products', icon: Boxes, roles: ALL_ROLES },
       { label: 'Customers', path: '/customers', icon: UserRound, roles: ALL_ROLES },
     ],
   },

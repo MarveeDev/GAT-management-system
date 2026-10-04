@@ -7,6 +7,7 @@ import AppLayout from '../layouts/AppLayout'
 import Customers from '../pages/Customers'
 import Login from '../pages/Login'
 import NotFound from '../pages/NotFound'
+import Products from '../pages/Products'
 import Purchases from '../pages/Purchases'
 import Reports from '../pages/Reports'
 import Shops from '../pages/Shops'
@@ -71,6 +72,7 @@ export default function AppRoutes() {
           <Route path="/shops" element={<Shops />} />
           <Route path="/staff" element={<Staff />} />
           <Route path="/purchases" element={<Purchases />} />
+          <Route path="/products" element={<Products />} />
           <Route path="/customers" element={<Customers />} />
           <Route path="/sms" element={<Sms />} />
           <Route path="/reports" element={<Reports />} />
