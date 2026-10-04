@@ -18,6 +18,14 @@ class AuditAction:
 
     PURCHASE_CREATED = "purchase.created"
 
+    PRODUCT_CREATED = "product.created"
+    PRODUCT_UPDATED = "product.updated"
+    PRODUCT_ACTIVATED = "product.activated"
+    PRODUCT_DEACTIVATED = "product.deactivated"
+
+    STOCK_INITIALIZED = "stock.initialized"
+    STOCK_ADJUSTED = "stock.adjusted"
+
     SMS_SENT = "sms.sent"
     SMS_FAILED = "sms.failed"
     SMS_RETRY = "sms.retry"

@@ -30,6 +30,8 @@ class Shop(BaseModel):
     purchases = db.relationship("Purchase", back_populates="shop")
     sms_logs = db.relationship("SMSLog", back_populates="shop")
     audit_logs = db.relationship("AuditLog", back_populates="shop")
+    inventories = db.relationship("ShopInventory", back_populates="shop")
+    stock_movements = db.relationship("StockMovement", back_populates="shop")
 
     def to_dict(self) -> dict:
         return {

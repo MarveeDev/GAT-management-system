@@ -45,6 +45,7 @@ class User(BaseModel):
     purchases = db.relationship("Purchase", back_populates="staff")
     sms_templates = db.relationship("SMSTemplate", back_populates="creator")
     audit_logs = db.relationship("AuditLog", back_populates="user")
+    stock_movements = db.relationship("StockMovement", back_populates="actor")
 
     def to_dict(self) -> dict:
         return {

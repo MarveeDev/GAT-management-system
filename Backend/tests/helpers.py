@@ -4,12 +4,17 @@ from werkzeug.security import generate_password_hash
 
 from app.models import (
     Customer,
+    Product,
+    ProductStatus,
     Purchase,
     Shop,
+    ShopInventory,
     ShopStatus,
     SMSLog,
     SMSTemplate,
     SMSStatus,
+    StockMovement,
+    StockMovementType,
     User,
     UserRole,
     UserStatus,
@@ -95,6 +100,59 @@ def make_template(session, name="PURCHASE_THANK_YOU", message=None, is_active=Tr
     session.add(template)
     session.commit()
     return template
+
+
+def make_product(
+    session,
+    name,
+    minimum_price=Decimal("15.00"),
+    maximum_price=Decimal("20.00"),
+    category=None,
+    status=ProductStatus.ACTIVE,
+):
+    product = Product(
+        name=name,
+        category=category,
+        minimum_price=minimum_price,
+        maximum_price=maximum_price,
+        status=status,
+    )
+    session.add(product)
+    session.commit()
+    return product
+
+
+def make_inventory(session, shop, product, quantity=0):
+    inventory = ShopInventory(shop_id=shop.id, product_id=product.id, quantity=quantity)
+    session.add(inventory)
+    session.commit()
+    return inventory
+
+
+def make_stock_movement(
+    session,
+    shop,
+    product,
+    quantity_change,
+    quantity_before,
+    quantity_after,
+    movement_type=StockMovementType.MANUAL_ADJUSTMENT,
+    actor=None,
+    reference_id=None,
+):
+    movement = StockMovement(
+        product_id=product.id,
+        shop_id=shop.id,
+        quantity_change=quantity_change,
+        quantity_before=quantity_before,
+        quantity_after=quantity_after,
+        movement_type=movement_type,
+        reference_id=reference_id,
+        actor_id=actor.id if actor else None,
+    )
+    session.add(movement)
+    session.commit()
+    return movement
 
 
 def make_sms_log(
