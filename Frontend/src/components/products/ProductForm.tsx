@@ -93,7 +93,7 @@ export default function ProductForm({ initial, onSubmit, onCancel }: ProductForm
           onChange={(event) => setName(event.target.value)}
           required
           className={inputClass}
-          placeholder="e.g. Milo 400g"
+          placeholder="e.g. Bluetooth Speaker"
         />
       </div>
 
@@ -106,7 +106,7 @@ export default function ProductForm({ initial, onSubmit, onCancel }: ProductForm
           value={category}
           onChange={(event) => setCategory(event.target.value)}
           className={inputClass}
-          placeholder="e.g. Food Items"
+          placeholder="e.g. Audio & Accessories"
         />
       </div>
 
@@ -121,7 +121,7 @@ export default function ProductForm({ initial, onSubmit, onCancel }: ProductForm
             onChange={(event) => setMinimumPrice(event.target.value)}
             inputMode="decimal"
             className={inputClass}
-            placeholder="15.00"
+            placeholder="e.g. 100.00"
           />
         </div>
         <div>
@@ -134,7 +134,7 @@ export default function ProductForm({ initial, onSubmit, onCancel }: ProductForm
             onChange={(event) => setMaximumPrice(event.target.value)}
             inputMode="decimal"
             className={inputClass}
-            placeholder="20.00"
+            placeholder="e.g. 150.00"
           />
         </div>
       </div>
