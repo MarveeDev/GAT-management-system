@@ -16,10 +16,13 @@ import {
   listPurchases,
   type PurchaseListResponse,
 } from '../services/purchaseService'
+import { listInventory } from '../services/inventoryService'
+import { listProducts } from '../services/productService'
 import { listShops } from '../services/shopService'
 import { listSmsLogs } from '../services/smsService'
 import type { Pagination } from '../types/api'
-import type { Purchase, PurchaseCreatePayload, Shop } from '../types'
+import type { Inventory, Product, Purchase, PurchaseCreatePayload, Shop } from '../types'
+import { buildInventoryByProduct } from '../utils/inventory'
 
 const PER_PAGE = 20
 
@@ -60,6 +63,8 @@ export default function Purchases() {
 
   const [shops, setShops] = useState<Shop[]>([])
   const [smsMap, setSmsMap] = useState<Map<string, string>>(new Map())
+  const [products, setProducts] = useState<Product[]>([])
+  const [inventory, setInventoryRows] = useState<Inventory[]>([])
 
   const [formOpen, setFormOpen] = useState(false)
   const [detailsPurchase, setDetailsPurchase] = useState<Purchase | null>(null)
@@ -138,8 +143,26 @@ export default function Purchases() {
     return () => clearTimeout(timer)
   }, [result])
 
+  useEffect(() => {
+    let active = true
+    Promise.all([listProducts(), listInventory()])
+      .then(([productsRes, inventoryRes]) => {
+        if (!active) return
+        setProducts(productsRes.products)
+        setInventoryRows(inventoryRes.inventory)
+      })
+      .catch(() => {
+        // catalog is best-effort; the form degrades to an empty product list
+      })
+    return () => {
+      active = false
+    }
+  }, [reloadToken])
+
   const shopNames = useMemo(() => new Map(shops.map((shop) => [shop.id, shop.name])), [shops])
   const activeShops = useMemo(() => shops.filter((shop) => shop.status === 'ACTIVE'), [shops])
+  const activeProducts = useMemo(() => products.filter((product) => product.status === 'ACTIVE'), [products])
+  const inventoryByProduct = useMemo(() => buildInventoryByProduct(inventory), [inventory])
   const assignedShopName = isSuperAdmin
     ? null
     : (shopNames.get(user?.shop_id ?? '') ?? null)
@@ -306,7 +329,10 @@ export default function Purchases() {
           <PurchaseForm
             isSuperAdmin={isSuperAdmin}
             activeShops={activeShops}
+            assignedShopId={user?.shop_id ?? null}
             assignedShopName={assignedShopName}
+            products={activeProducts}
+            inventoryByProduct={inventoryByProduct}
             onSubmit={handleCreate}
             onCancel={() => setFormOpen(false)}
           />

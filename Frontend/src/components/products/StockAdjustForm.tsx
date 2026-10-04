@@ -21,28 +21,31 @@ export default function StockAdjustForm({
   onSubmit,
   onCancel,
 }: StockAdjustFormProps) {
-  const [value, setValue] = useState('')
+  const [addValue, setAddValue] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const addNumber = /^\d+$/.test(addValue.trim()) ? parseInt(addValue.trim(), 10) : 0
+  const totalStock = currentQuantity + addNumber
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
-    const trimmed = value.trim()
+    const trimmed = addValue.trim()
     if (!/^\d+$/.test(trimmed)) {
-      setError('Enter a valid whole-number quantity.')
+      setError('Enter a valid whole-number quantity to add.')
       return
     }
-    const quantity = Number(trimmed)
-    if (!Number.isFinite(quantity) || quantity < 0) {
-      setError('Quantity must be zero or greater.')
+    const add = Number(trimmed)
+    if (!Number.isFinite(add) || add < 0) {
+      setError('Stock to add must be zero or greater.')
       return
     }
 
     setSubmitting(true)
     setError(null)
     try {
-      await onSubmit(quantity)
+      await onSubmit(currentQuantity + add)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to update stock.')
       setSubmitting(false)
@@ -55,26 +58,28 @@ export default function StockAdjustForm({
         <p className="font-medium text-slate-900">{product.name}</p>
         <p className="mt-0.5 text-slate-500">{shopName}</p>
         <p className="mt-2 text-slate-600">
-          Current stock: <span className="font-semibold text-slate-900">{currentQuantity}</span>
+          Previous Stock:{' '}
+          <span className="font-semibold text-slate-900">{currentQuantity} units</span>
         </p>
       </div>
 
       <div>
-        <label htmlFor="stock-quantity" className="block text-sm font-medium text-slate-700">
-          New Stock Quantity <span className="text-danger-600">*</span>
+        <label htmlFor="stock-to-add" className="block text-sm font-medium text-slate-700">
+          Stock to Add <span className="text-danger-600">*</span>
         </label>
         <input
-          id="stock-quantity"
-          value={value}
-          onChange={(event) => setValue(event.target.value)}
+          id="stock-to-add"
+          value={addValue}
+          onChange={(event) => setAddValue(event.target.value.replace(/\D/g, ''))}
           inputMode="numeric"
           className={inputClass}
-          placeholder="e.g. 47"
+          placeholder="e.g. 10"
         />
-        <p className="mt-1 text-xs text-slate-500">
-          Sets the absolute stock level for this shop. Entering a stock level for the first time
-          initializes it; changing an existing value adjusts it.
-        </p>
+      </div>
+
+      <div className="flex items-center justify-between border-t border-slate-200 pt-3 text-sm">
+        <span className="text-slate-600">Total Stock</span>
+        <span className="font-semibold text-slate-900">{totalStock} units</span>
       </div>
 
       <ErrorMessage message={error ?? undefined} title="Unable to update stock" />
@@ -95,7 +100,7 @@ export default function StockAdjustForm({
           {submitting && (
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
           )}
-          {submitting ? 'Saving…' : 'Save Stock'}
+          {submitting ? 'Saving…' : 'Update Stock'}
         </button>
       </div>
     </form>

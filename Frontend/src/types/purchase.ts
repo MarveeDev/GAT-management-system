@@ -16,6 +16,11 @@ export interface Purchase {
   product: string
   amount: string
   currency: string
+  product_id?: string | null
+  quantity?: number | null
+  unit_price?: string | null
+  product_info?: { id: string; name: string; category: string | null } | null
+  remaining_stock?: number | null
   created_at: string | null
   updated_at: string | null
   customer?: Customer
@@ -32,8 +37,11 @@ export interface PurchaseCreatePayload {
   shop_id?: string
   customer_id?: string
   customer?: CustomerInput
-  product: string
-  amount: number | string
+  product?: string
+  product_id?: string
+  quantity?: number
+  unit_price?: string
+  amount?: number | string
   currency?: string
 }
 

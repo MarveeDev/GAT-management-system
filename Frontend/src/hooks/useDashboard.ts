@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
 
 import { listAllPurchases, listPurchases } from '../services/purchaseService'
+import { listInventory } from '../services/inventoryService'
+import { listProducts } from '../services/productService'
 import { listShops } from '../services/shopService'
 import { listSmsLogs } from '../services/smsService'
 import type { AsyncSection } from '../types/api'
 import type { ChartPoint } from '../types/dashboard'
-import type { Purchase, Shop, SMSLog } from '../types'
+import type { Inventory, Product, Purchase, Shop, SMSLog } from '../types'
 
 const CHART_PAGE_SIZE = 100
 
@@ -72,6 +74,8 @@ export function useDashboard() {
   const [uniqueCustomers, setUniqueCustomers] = useState<AsyncSection<number>>(emptySection)
   const [recentPurchases, setRecentPurchases] = useState<AsyncSection<Purchase[]>>(emptySection)
   const [chart, setChart] = useState<AsyncSection<ChartPoint[]>>(emptySection)
+  const [products, setProducts] = useState<AsyncSection<Product[]>>(emptySection)
+  const [inventory, setInventory] = useState<AsyncSection<Inventory[]>>(emptySection)
   const [reloadToken, setReloadToken] = useState(0)
 
   useEffect(() => {
@@ -83,6 +87,20 @@ export function useDashboard() {
       })
       .catch((error: unknown) => {
         if (active) setShops({ data: null, loading: false, error: errorMessage(error) })
+      })
+
+    Promise.all([listProducts(), listInventory()])
+      .then(([productsRes, inventoryRes]) => {
+        if (active) {
+          setProducts({ data: productsRes.products, loading: false, error: null })
+          setInventory({ data: inventoryRes.inventory, loading: false, error: null })
+        }
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          setProducts({ data: null, loading: false, error: errorMessage(error) })
+          setInventory({ data: null, loading: false, error: errorMessage(error) })
+        }
       })
 
     listPurchases({ per_page: 1 })
@@ -160,6 +178,8 @@ export function useDashboard() {
     uniqueCustomers,
     recentPurchases,
     chart,
+    products,
+    inventory,
     refresh,
   }
 }

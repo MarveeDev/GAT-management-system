@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { CircleAlert, MessageSquare, ShoppingCart, Users } from 'lucide-react'
 
 import ActivityChart from '../components/dashboard/ActivityChart'
@@ -14,6 +14,7 @@ import { useAuth } from '../contexts/authContext'
 import { useDashboard } from '../hooks/useDashboard'
 import { createPurchase } from '../services/purchaseService'
 import type { PurchaseCreatePayload, PurchaseSmsResult } from '../types'
+import { buildInventoryByProduct } from '../utils/inventory'
 
 const TODAY = new Date().toLocaleDateString(undefined, {
   weekday: 'long',
@@ -32,12 +33,22 @@ export default function Dashboard() {
     uniqueCustomers,
     recentPurchases,
     chart,
+    products,
+    inventory,
     refresh,
   } = useDashboard()
 
   const isSuperAdmin = user?.role === 'SUPER_ADMIN'
   const shopNames = new Map((shops.data ?? []).map((shop) => [shop.id, shop.name]))
   const activeShops = (shops.data ?? []).filter((shop) => shop.status === 'ACTIVE')
+  const activeProducts = useMemo(
+    () => (products.data ?? []).filter((product) => product.status === 'ACTIVE'),
+    [products.data],
+  )
+  const inventoryByProduct = useMemo(
+    () => buildInventoryByProduct(inventory.data ?? []),
+    [inventory.data],
+  )
   const assignedShopName = isSuperAdmin
     ? null
     : (shopNames.get(user?.shop_id ?? '') ?? null)
@@ -126,7 +137,10 @@ export default function Dashboard() {
             <PurchaseForm
               isSuperAdmin={isSuperAdmin}
               activeShops={activeShops}
+              assignedShopId={user?.shop_id ?? null}
               assignedShopName={assignedShopName}
+              products={activeProducts}
+              inventoryByProduct={inventoryByProduct}
               onSubmit={handleCreatePurchase}
               onValuesChange={handleValuesChange}
             />
