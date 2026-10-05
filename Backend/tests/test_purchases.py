@@ -131,22 +131,24 @@ def test_invalid_customer_id_rejected(session, client):
 # --- purchase creation ---
 
 
-def test_staff_can_create_purchase(session, client):
+def test_staff_cannot_create_legacy_purchase(session, client):
     shop = make_shop(session, "Shop A")
     make_user(session, UserRole.STAFF, "staff@example.com", shop=shop)
     token = get_token(client, "staff@example.com")
 
     resp = post_purchase(client, token, {"customer": customer_payload(), "product": "Rice", "amount": 10})
-    assert resp.status_code == 201
+    assert resp.status_code == 403
+    assert Purchase.query.count() == 0
 
 
-def test_shop_manager_can_create_purchase(session, client):
+def test_shop_manager_cannot_create_legacy_purchase(session, client):
     shop = make_shop(session, "Shop A")
     make_user(session, UserRole.SHOP_MANAGER, "mgr@example.com", shop=shop)
     token = get_token(client, "mgr@example.com")
 
     resp = post_purchase(client, token, {"customer": customer_payload(), "product": "Rice", "amount": 10})
-    assert resp.status_code == 201
+    assert resp.status_code == 403
+    assert Purchase.query.count() == 0
 
 
 def test_super_admin_can_create_purchase(session, client):
@@ -158,35 +160,34 @@ def test_super_admin_can_create_purchase(session, client):
 
 
 def test_purchase_stores_correct_shop_id(session, client):
+    token = super_admin_token(session, client)
     shop = make_shop(session, "Shop A")
-    make_user(session, UserRole.STAFF, "staff@example.com", shop=shop)
-    token = get_token(client, "staff@example.com")
 
-    resp = post_purchase(client, token, {"customer": customer_payload(), "product": "Rice", "amount": 10})
+    resp = post_purchase(client, token, {"shop_id": shop.id, "customer": customer_payload(), "product": "Rice", "amount": 10})
     assert resp.get_json()["purchase"]["shop_id"] == shop.id
 
 
 def test_purchase_stores_authenticated_staff_id(session, client):
     shop = make_shop(session, "Shop A")
-    staff = make_user(session, UserRole.STAFF, "staff@example.com", shop=shop)
-    token = get_token(client, "staff@example.com")
+    admin = make_user(session, UserRole.SUPER_ADMIN, "admin@example.com")
+    token = get_token(client, "admin@example.com")
 
-    resp = post_purchase(client, token, {"customer": customer_payload(), "product": "Rice", "amount": 10})
-    assert resp.get_json()["purchase"]["staff_id"] == staff.id
+    resp = post_purchase(client, token, {"shop_id": shop.id, "customer": customer_payload(), "product": "Rice", "amount": 10})
+    assert resp.get_json()["purchase"]["staff_id"] == admin.id
 
 
 def test_purchase_response_includes_staff_identity(session, client):
     shop = make_shop(session, "Shop A")
-    staff = make_user(session, UserRole.STAFF, "staff@example.com", shop=shop)
-    token = get_token(client, "staff@example.com")
+    admin = make_user(session, UserRole.SUPER_ADMIN, "admin@example.com")
+    token = get_token(client, "admin@example.com")
 
-    resp = post_purchase(client, token, {"customer": customer_payload(), "product": "Rice", "amount": 10})
+    resp = post_purchase(client, token, {"shop_id": shop.id, "customer": customer_payload(), "product": "Rice", "amount": 10})
     assert resp.status_code == 201
     body = resp.get_json()["purchase"]
-    assert body["staff"]["id"] == staff.id
-    assert body["staff"]["name"] == "staff"
-    assert body["staff"]["email"] == "staff@example.com"
-    assert body["staff"]["role"] == "STAFF"
+    assert body["staff"]["id"] == admin.id
+    assert body["staff"]["name"] == "admin"
+    assert body["staff"]["email"] == "admin@example.com"
+    assert body["staff"]["role"] == "SUPER_ADMIN"
     assert "password" not in body["staff"]
 
 
@@ -205,56 +206,50 @@ def test_purchase_list_includes_staff_identity(session, client):
 
 
 def test_product_required(session, client):
+    token = super_admin_token(session, client)
     shop = make_shop(session, "Shop A")
-    make_user(session, UserRole.STAFF, "staff@example.com", shop=shop)
-    token = get_token(client, "staff@example.com")
 
-    resp = post_purchase(client, token, {"customer": customer_payload(), "amount": 10})
+    resp = post_purchase(client, token, {"shop_id": shop.id, "customer": customer_payload(), "amount": 10})
     assert resp.status_code == 400
 
 
 def test_amount_required(session, client):
+    token = super_admin_token(session, client)
     shop = make_shop(session, "Shop A")
-    make_user(session, UserRole.STAFF, "staff@example.com", shop=shop)
-    token = get_token(client, "staff@example.com")
 
-    resp = post_purchase(client, token, {"customer": customer_payload(), "product": "Rice"})
+    resp = post_purchase(client, token, {"shop_id": shop.id, "customer": customer_payload(), "product": "Rice"})
     assert resp.status_code == 400
 
 
 def test_negative_amount_rejected(session, client):
+    token = super_admin_token(session, client)
     shop = make_shop(session, "Shop A")
-    make_user(session, UserRole.STAFF, "staff@example.com", shop=shop)
-    token = get_token(client, "staff@example.com")
 
-    resp = post_purchase(client, token, {"customer": customer_payload(), "product": "Rice", "amount": -5})
+    resp = post_purchase(client, token, {"shop_id": shop.id, "customer": customer_payload(), "product": "Rice", "amount": -5})
     assert resp.status_code == 400
 
 
 def test_invalid_amount_rejected(session, client):
+    token = super_admin_token(session, client)
     shop = make_shop(session, "Shop A")
-    make_user(session, UserRole.STAFF, "staff@example.com", shop=shop)
-    token = get_token(client, "staff@example.com")
 
-    resp = post_purchase(client, token, {"customer": customer_payload(), "product": "Rice", "amount": "abc"})
+    resp = post_purchase(client, token, {"shop_id": shop.id, "customer": customer_payload(), "product": "Rice", "amount": "abc"})
     assert resp.status_code == 400
 
 
 def test_currency_defaults_to_ghs(session, client):
+    token = super_admin_token(session, client)
     shop = make_shop(session, "Shop A")
-    make_user(session, UserRole.STAFF, "staff@example.com", shop=shop)
-    token = get_token(client, "staff@example.com")
 
-    resp = post_purchase(client, token, {"customer": customer_payload(), "product": "Rice", "amount": 10})
+    resp = post_purchase(client, token, {"shop_id": shop.id, "customer": customer_payload(), "product": "Rice", "amount": 10})
     assert resp.get_json()["purchase"]["currency"] == "GHS"
 
 
 def test_currency_normalized_to_uppercase(session, client):
+    token = super_admin_token(session, client)
     shop = make_shop(session, "Shop A")
-    make_user(session, UserRole.STAFF, "staff@example.com", shop=shop)
-    token = get_token(client, "staff@example.com")
 
-    resp = post_purchase(client, token, {"customer": customer_payload(), "product": "Rice", "amount": 10, "currency": "ghs"})
+    resp = post_purchase(client, token, {"shop_id": shop.id, "customer": customer_payload(), "product": "Rice", "amount": 10, "currency": "ghs"})
     assert resp.get_json()["purchase"]["currency"] == "GHS"
 
 
@@ -317,11 +312,10 @@ def test_client_provided_staff_id_rejected(session, client):
 
 
 def test_purchase_creates_audit_record_atomically(session, client):
+    token = super_admin_token(session, client)
     shop = make_shop(session, "Shop A")
-    make_user(session, UserRole.STAFF, "staff@example.com", shop=shop)
-    token = get_token(client, "staff@example.com")
 
-    resp = post_purchase(client, token, {"customer": customer_payload(), "product": "Rice", "amount": 10})
+    resp = post_purchase(client, token, {"shop_id": shop.id, "customer": customer_payload(), "product": "Rice", "amount": 10})
     assert resp.status_code == 201
     assert Purchase.query.count() == 1
     assert AuditLog.query.filter_by(action=AuditAction.PURCHASE_CREATED).count() == 1
@@ -334,11 +328,10 @@ def test_super_admin_requires_shop_id(session, client):
 
 
 def test_failed_purchase_leaves_no_orphan_customer(session, client):
+    token = super_admin_token(session, client)
     shop = make_shop(session, "Shop A")
-    make_user(session, UserRole.STAFF, "staff@example.com", shop=shop)
-    token = get_token(client, "staff@example.com")
 
-    resp = post_purchase(client, token, {"customer": customer_payload(), "product": "Rice", "amount": "abc"})
+    resp = post_purchase(client, token, {"shop_id": shop.id, "customer": customer_payload(), "product": "Rice", "amount": "abc"})
     assert resp.status_code == 400
     assert Customer.query.count() == 0
     assert Purchase.query.count() == 0

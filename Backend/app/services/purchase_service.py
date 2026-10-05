@@ -140,6 +140,11 @@ def create_purchase(actor: User, data: dict) -> tuple[Purchase | None, tuple[int
 
     product_id = data.get("product_id")
     if not product_id:
+        # The legacy path (free-text product, arbitrary amount, no inventory
+        # deduction) is restricted to SUPER_ADMIN so SHOP_MANAGER/STAFF cannot
+        # bypass the inventory-controlled purchase flow.
+        if actor.role != UserRole.SUPER_ADMIN:
+            return None, (403, "You do not have permission to perform this action.")
         return _create_legacy_purchase(actor, shop_id, data, currency)
 
     return _create_inventory_purchase(actor, shop_id, data, currency, product_id)
