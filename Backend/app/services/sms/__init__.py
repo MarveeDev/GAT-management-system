@@ -4,6 +4,7 @@ from app.services.sms.base import (
     SMSProvider,
     SMSProviderError,
 )
+from app.services.sms.gonline import GOnlineSMSProvider
 from app.services.sms.mock import MockSMSProvider
 from app.services.sms.provider import get_sms_provider
 
@@ -13,5 +14,6 @@ __all__ = [
     "SMSProviderError",
     "ProviderNotImplementedError",
     "MockSMSProvider",
+    "GOnlineSMSProvider",
     "get_sms_provider",
 ]
