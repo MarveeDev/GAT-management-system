@@ -21,6 +21,7 @@ export interface SMSListParams {
   per_page?: number
   shop_id?: string
   purchase_id?: string
+  purchase_ids?: string[]
   customer_id?: string
   status?: SMSStatus
   date_from?: string

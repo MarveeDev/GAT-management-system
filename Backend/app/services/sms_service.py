@@ -198,6 +198,7 @@ def list_sms_logs(
     *,
     shop_id: str | None = None,
     purchase_id: str | None = None,
+    purchase_ids: list[str] | None = None,
     customer_id: str | None = None,
     status: str | None = None,
     date_from=None,
@@ -218,6 +219,8 @@ def list_sms_logs(
 
     if purchase_id:
         query = query.filter(SMSLog.purchase_id == purchase_id)
+    if purchase_ids:
+        query = query.filter(SMSLog.purchase_id.in_(purchase_ids))
     if customer_id:
         query = query.filter(SMSLog.customer_id == customer_id)
     if status:

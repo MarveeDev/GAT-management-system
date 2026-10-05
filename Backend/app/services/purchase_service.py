@@ -1,5 +1,6 @@
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
+from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 
 from app.extensions import db
@@ -322,7 +323,7 @@ def list_purchases(
     search: str | None = None,
     page: int = 1,
     per_page: int = 20,
-) -> tuple[list[Purchase], dict]:
+) -> tuple[list[Purchase], dict, dict]:
     page = max(1, page)
     per_page = min(max(1, per_page), 100)
 
@@ -349,6 +350,9 @@ def list_purchases(
         query = query.filter(Purchase.product.ilike(f"%{search}%"))
 
     total = query.count()
+    unique_customers = query.with_entities(
+        func.count(func.distinct(Purchase.customer_id))
+    ).scalar()
     pages = (total + per_page - 1) // per_page
 
     purchases = (
@@ -359,4 +363,5 @@ def list_purchases(
     )
 
     pagination = {"page": page, "per_page": per_page, "total": total, "pages": pages}
-    return purchases, pagination
+    summary = {"unique_customers": unique_customers}
+    return purchases, pagination, summary

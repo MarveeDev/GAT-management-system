@@ -35,6 +35,13 @@ def _parse_date(value, end_of_day=False):
     return dt
 
 
+def _parse_ids(value):
+    if not value:
+        return None
+    ids = [item.strip() for item in value.split(",") if item.strip()]
+    return ids or None
+
+
 @sms_bp.get("/sms")
 @roles_required("SUPER_ADMIN", "SHOP_MANAGER", "STAFF")
 def list_sms_logs():
@@ -59,6 +66,7 @@ def list_sms_logs():
         actor,
         shop_id=request.args.get("shop_id"),
         purchase_id=request.args.get("purchase_id"),
+        purchase_ids=_parse_ids(request.args.get("purchase_ids")),
         customer_id=request.args.get("customer_id"),
         status=request.args.get("status"),
         date_from=date_from,

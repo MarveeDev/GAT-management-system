@@ -98,7 +98,7 @@ def list_purchases():
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
 
-    purchases, pagination = purchase_service.list_purchases(
+    purchases, pagination, summary = purchase_service.list_purchases(
         actor,
         shop_id=request.args.get("shop_id"),
         staff_id=request.args.get("staff_id"),
@@ -113,6 +113,7 @@ def list_purchases():
         {
             "purchases": [p.to_dict() for p in purchases],
             "pagination": pagination,
+            "summary": summary,
         }
     ), 200
 

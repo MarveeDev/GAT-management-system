@@ -1,5 +1,3 @@
-import type { Purchase } from './purchase'
-
 export interface Customer {
   id: string
   name: string
@@ -7,9 +5,8 @@ export interface Customer {
   email: string | null
 }
 
-export interface CustomerEntry {
+export interface CustomerSummary {
   customer: Customer
-  purchases: Purchase[]
-  purchaseCount: number
-  lastPurchaseAt: string | null
+  purchase_count: number
+  last_purchase_at: string | null
 }

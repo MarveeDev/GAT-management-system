@@ -19,7 +19,7 @@ import {
 import { listInventory } from '../services/inventoryService'
 import { listProducts } from '../services/productService'
 import { listShops } from '../services/shopService'
-import { listSmsLogs } from '../services/smsService'
+import { listSmsLogsForPurchases } from '../services/smsService'
 import type { Pagination } from '../types/api'
 import type { Inventory, Product, Purchase, PurchaseCreatePayload, Shop } from '../types'
 import { buildInventoryByProduct } from '../utils/inventory'
@@ -96,6 +96,19 @@ export default function Purchases() {
           setPurchases(res.purchases)
           setPagination(res.pagination)
           setError(null)
+          const ids = res.purchases.map((purchase) => purchase.id)
+          listSmsLogsForPurchases(ids)
+            .then((logs) => {
+              if (!active) return
+              const map = new Map<string, string>()
+              for (const log of logs) {
+                if (!map.has(log.purchase_id)) map.set(log.purchase_id, log.status)
+              }
+              setSmsMap(map)
+            })
+            .catch(() => {
+              // best-effort; SMS status is not required for the purchases table
+            })
         }
       })
       .catch((err) => {
@@ -114,19 +127,6 @@ export default function Purchases() {
     listShops()
       .then((res) => {
         if (active) setShops(res.shops)
-      })
-      .catch(() => {
-        // best-effort
-      })
-
-    listSmsLogs({ per_page: 100 })
-      .then((res) => {
-        if (!active) return
-        const map = new Map<string, string>()
-        for (const log of res.sms_logs) {
-          if (!map.has(log.purchase_id)) map.set(log.purchase_id, log.status)
-        }
-        setSmsMap(map)
       })
       .catch(() => {
         // best-effort

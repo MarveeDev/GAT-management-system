@@ -1,11 +1,11 @@
 import { Eye } from 'lucide-react'
 
-import type { CustomerEntry } from '../../types'
+import type { CustomerSummary } from '../../types'
 import { formatDateTime } from '../../utils/format'
 
 interface CustomerTableProps {
-  entries: CustomerEntry[]
-  onDetails: (entry: CustomerEntry) => void
+  entries: CustomerSummary[]
+  onDetails: (entry: CustomerSummary) => void
 }
 
 export default function CustomerTable({ entries, onDetails }: CustomerTableProps) {
@@ -31,9 +31,9 @@ export default function CustomerTable({ entries, onDetails }: CustomerTableProps
                 )}
               </td>
               <td className="px-5 py-3 text-slate-600">{entry.customer.phone || '—'}</td>
-              <td className="px-5 py-3 text-slate-600">{entry.purchaseCount}</td>
+              <td className="px-5 py-3 text-slate-600">{entry.purchase_count}</td>
               <td className="whitespace-nowrap px-5 py-3 text-slate-600">
-                {formatDateTime(entry.lastPurchaseAt)}
+                {formatDateTime(entry.last_purchase_at)}
               </td>
               <td className="px-5 py-3 text-right">
                 <button

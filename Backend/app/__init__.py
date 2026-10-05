@@ -25,6 +25,7 @@ def create_app(config_object: type[Config] = Config) -> Flask:
     )
 
     from app.routes.auth import auth_bp
+    from app.routes.customers import customers_bp
     from app.routes.health import health_bp
     from app.routes.inventory import inventory_bp
     from app.routes.products import products_bp
@@ -36,6 +37,7 @@ def create_app(config_object: type[Config] = Config) -> Flask:
 
     app.register_blueprint(health_bp, url_prefix="/api")
     app.register_blueprint(auth_bp, url_prefix="/api")
+    app.register_blueprint(customers_bp, url_prefix="/api")
     app.register_blueprint(shops_bp, url_prefix="/api")
     app.register_blueprint(users_bp, url_prefix="/api")
     app.register_blueprint(purchases_bp, url_prefix="/api")

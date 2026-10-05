@@ -10,6 +10,9 @@ import type {
 export interface PurchaseListResponse {
   purchases: Purchase[]
   pagination: Pagination
+  summary: {
+    unique_customers: number
+  }
 }
 
 export function createPurchase(payload: PurchaseCreatePayload): Promise<PurchaseCreateResponse> {
@@ -22,19 +25,4 @@ export function listPurchases(params: PurchaseListParams = {}): Promise<Purchase
 
 export function getPurchase(id: string): Promise<{ purchase: Purchase }> {
   return api.get<{ purchase: Purchase }>(`/purchases/${id}`, { auth: true })
-}
-
-const ALL_PURCHASES_PAGE_SIZE = 100
-const ALL_PURCHASES_MAX_PAGES = 100
-
-export async function listAllPurchases(): Promise<Purchase[]> {
-  const all: Purchase[] = []
-  let page = 1
-  while (page <= ALL_PURCHASES_MAX_PAGES) {
-    const res = await listPurchases({ page, per_page: ALL_PURCHASES_PAGE_SIZE })
-    all.push(...res.purchases)
-    if (page >= res.pagination.pages) break
-    page += 1
-  }
-  return all
 }

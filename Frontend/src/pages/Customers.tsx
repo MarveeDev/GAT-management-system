@@ -7,29 +7,32 @@ import LoadingSpinner from '../components/LoadingSpinner'
 import Modal from '../components/Modal'
 import CustomerDetails from '../components/customers/CustomerDetails'
 import CustomerTable from '../components/customers/CustomerTable'
-import { listAllPurchases } from '../services/purchaseService'
+import { listCustomers } from '../services/customerService'
+import { listPurchases } from '../services/purchaseService'
 import { listShops } from '../services/shopService'
-import type { CustomerEntry, Purchase, Shop } from '../types'
+import type { CustomerSummary, Purchase, Shop } from '../types'
 
 function customerErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Unable to load customers.'
 }
 
 export default function Customers() {
-  const [purchases, setPurchases] = useState<Purchase[]>([])
+  const [customers, setCustomers] = useState<CustomerSummary[]>([])
   const [shops, setShops] = useState<Shop[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const [search, setSearch] = useState('')
-  const [detailsEntry, setDetailsEntry] = useState<CustomerEntry | null>(null)
+  const [detailsCustomer, setDetailsCustomer] = useState<CustomerSummary | null>(null)
+  const [detailsPurchases, setDetailsPurchases] = useState<Purchase[]>([])
+  const [detailsLoading, setDetailsLoading] = useState(false)
 
   useEffect(() => {
     let active = true
-    listAllPurchases()
-      .then((all) => {
+    listCustomers()
+      .then((res) => {
         if (active) {
-          setPurchases(all)
+          setCustomers(res.customers)
           setError(null)
         }
       })
@@ -53,35 +56,21 @@ export default function Customers() {
     }
   }, [])
 
-  const shopNames = useMemo(() => new Map(shops.map((shop) => [shop.id, shop.name])), [shops])
-
-  const customers = useMemo<CustomerEntry[]>(() => {
-    const map = new Map<string, CustomerEntry>()
-    for (const purchase of purchases) {
-      if (!purchase.customer) continue
-      const existing = map.get(purchase.customer_id)
-      if (existing) {
-        existing.purchases.push(purchase)
-        existing.purchaseCount += 1
-        if (
-          purchase.created_at &&
-          (!existing.lastPurchaseAt || purchase.created_at > existing.lastPurchaseAt)
-        ) {
-          existing.lastPurchaseAt = purchase.created_at
-        }
-      } else {
-        map.set(purchase.customer_id, {
-          customer: purchase.customer,
-          purchases: [purchase],
-          purchaseCount: 1,
-          lastPurchaseAt: purchase.created_at,
-        })
-      }
+  async function openDetails(entry: CustomerSummary) {
+    setDetailsCustomer(entry)
+    setDetailsPurchases([])
+    setDetailsLoading(true)
+    try {
+      const res = await listPurchases({ customer_id: entry.customer.id, per_page: 100 })
+      setDetailsPurchases(res.purchases)
+    } catch {
+      setDetailsPurchases([])
+    } finally {
+      setDetailsLoading(false)
     }
-    const list = Array.from(map.values())
-    list.sort((a, b) => (b.lastPurchaseAt ?? '').localeCompare(a.lastPurchaseAt ?? ''))
-    return list
-  }, [purchases])
+  }
+
+  const shopNames = useMemo(() => new Map(shops.map((shop) => [shop.id, shop.name])), [shops])
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase()
@@ -129,12 +118,20 @@ export default function Customers() {
       ) : filtered.length === 0 ? (
         <EmptyState title="No matching customers" description="No customers match your search." />
       ) : (
-        <CustomerTable entries={filtered} onDetails={setDetailsEntry} />
+        <CustomerTable entries={filtered} onDetails={openDetails} />
       )}
 
-      {detailsEntry && (
-        <Modal title="Customer Details" onClose={() => setDetailsEntry(null)}>
-          <CustomerDetails entry={detailsEntry} shopNames={shopNames} />
+      {detailsCustomer && (
+        <Modal title="Customer Details" onClose={() => setDetailsCustomer(null)}>
+          {detailsLoading ? (
+            <LoadingSpinner />
+          ) : (
+            <CustomerDetails
+              entry={detailsCustomer}
+              purchases={detailsPurchases}
+              shopNames={shopNames}
+            />
+          )}
         </Modal>
       )}
     </div>

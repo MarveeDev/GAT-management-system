@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 
-import { listAllPurchases, listPurchases } from '../services/purchaseService'
+import { listPurchases } from '../services/purchaseService'
 import { listInventory } from '../services/inventoryService'
 import { listProducts } from '../services/productService'
 import { listShops } from '../services/shopService'
@@ -105,10 +105,20 @@ export function useDashboard() {
 
     listPurchases({ per_page: 1 })
       .then((res) => {
-        if (active) setTotalPurchases({ data: res.pagination.total, loading: false, error: null })
+        if (active) {
+          setTotalPurchases({ data: res.pagination.total, loading: false, error: null })
+          setUniqueCustomers({
+            data: res.summary?.unique_customers ?? 0,
+            loading: false,
+            error: null,
+          })
+        }
       })
       .catch((error: unknown) => {
-        if (active) setTotalPurchases({ data: null, loading: false, error: errorMessage(error) })
+        if (active) {
+          setTotalPurchases({ data: null, loading: false, error: errorMessage(error) })
+          setUniqueCustomers({ data: null, loading: false, error: errorMessage(error) })
+        }
       })
 
     listSmsLogs({ status: 'SENT', per_page: 1 })
@@ -125,16 +135,6 @@ export function useDashboard() {
       })
       .catch((error: unknown) => {
         if (active) setSmsFailed({ data: null, loading: false, error: errorMessage(error) })
-      })
-
-    listAllPurchases()
-      .then((all) => {
-        if (!active) return
-        const count = new Set(all.map((p) => p.customer_id)).size
-        setUniqueCustomers({ data: count, loading: false, error: null })
-      })
-      .catch((error: unknown) => {
-        if (active) setUniqueCustomers({ data: null, loading: false, error: errorMessage(error) })
       })
 
     listPurchases({ per_page: 10 })
