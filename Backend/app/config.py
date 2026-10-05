@@ -7,31 +7,103 @@ load_dotenv()
 
 BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
+# Environment indicator. "development" is the safe default; set
+# FLASK_ENV=production (or APP_ENV=production) to enable production validation.
+ENVIRONMENTS = ("development", "testing", "production")
+
+
+def resolve_environment() -> str:
+    value = (os.getenv("FLASK_ENV") or os.getenv("APP_ENV") or "development").strip().lower()
+    return value if value in ENVIRONMENTS else "development"
+
+
+def _env_bool(name: str, default: bool = False) -> bool:
+    """Parse a boolean environment variable into a real bool.
+
+    Accepts common truthy spellings ("1", "true", "yes", "on") so callers never
+    end up with the literal string "false" being treated as truthy.
+    """
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _env_list(name: str, default: str) -> list[str]:
+    raw = os.getenv(name, default)
+    return [item.strip() for item in raw.split(",") if item.strip()]
+
+
+# Development-only fallbacks. These are intentionally weak and must never be
+# used in production (enforced by validate_production_config below).
+_DEV_SECRET_KEY = "dev-only-secret-key-change-me"
+_DEV_JWT_SECRET_KEY = "dev-only-jwt-secret-key-change-me"
+
+# Values that are obviously not production-safe secrets.
+_INSECURE_SECRET_VALUES = {
+    "",
+    _DEV_SECRET_KEY,
+    _DEV_JWT_SECRET_KEY,
+    "dev-only-change-me",
+    "dev-only-jwt-secret-change-me",
+    "change-me",
+    "change-me-to-a-long-random-string",
+    "replace-with-a-strong-secret",
+    "secret",
+    "changeme",
+    "password",
+}
+
+_MIN_SECRET_LENGTH = 16
+
 
 class Config:
-    SECRET_KEY = os.getenv("SECRET_KEY", "dev-only-change-me")
+    APP_ENV = resolve_environment()
 
-    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-only-jwt-secret-change-me")
+    SECRET_KEY = os.getenv("SECRET_KEY", _DEV_SECRET_KEY)
+    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", _DEV_JWT_SECRET_KEY)
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(
         hours=int(os.getenv("JWT_ACCESS_TOKEN_HOURS", "12"))
     )
 
-    CORS_ORIGINS = [
-        origin.strip()
-        for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
-        if origin.strip()
-    ]
+    CORS_ORIGINS = _env_list("CORS_ORIGINS", "http://localhost:5173")
 
-    DEBUG = os.getenv("FLASK_DEBUG", "1") == "1"
+    # Debug defaults to off. It may be enabled explicitly in development via
+    # FLASK_DEBUG=1, but is always forced off in production.
+    DEBUG = _env_bool("FLASK_DEBUG", default=False) and APP_ENV != "production"
 
-    SQLALCHEMY_DATABASE_URI = os.getenv(
-        "DATABASE_URL", f"sqlite:///{os.path.join(BASE_DIR, 'dev.db')}"
+    DATABASE_URL = os.getenv("DATABASE_URL", "")
+    SQLALCHEMY_DATABASE_URI = DATABASE_URL or (
+        f"sqlite:///{os.path.join(BASE_DIR, 'dev.db')}"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # SMS provider (mock by default; never sends real SMS)
     SMS_PROVIDER = os.getenv("SMS_PROVIDER", "mock")
     SMS_API_KEY = os.getenv("SMS_API_KEY", "")
-    SMS_API_SECRET = os.getenv("SMS_API_SECRET", "")
     SMS_SENDER_ID = os.getenv("SMS_SENDER_ID", "")
-    SMS_MOCK_FAIL = os.getenv("SMS_MOCK_FAIL", "0") == "1"
+    SMS_MOCK_FAIL = _env_bool("SMS_MOCK_FAIL", default=False)
+
+
+def validate_production_config(config) -> None:
+    """Fail fast when a production config is missing required values.
+
+    Raises RuntimeError naming the missing/insecure variable, never the value.
+    """
+    missing = []
+    for name in ("SECRET_KEY", "JWT_SECRET_KEY", "DATABASE_URL"):
+        if not config.get(name):
+            missing.append(name)
+    if missing:
+        raise RuntimeError(
+            "Production configuration error: missing required variable(s): "
+            + ", ".join(missing)
+            + "."
+        )
+
+    for name in ("SECRET_KEY", "JWT_SECRET_KEY"):
+        value = config.get(name) or ""
+        if value in _INSECURE_SECRET_VALUES or len(value) < _MIN_SECRET_LENGTH:
+            raise RuntimeError(
+                f"Production configuration error: {name} is missing or insecure."
+            )

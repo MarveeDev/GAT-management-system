@@ -1,13 +1,16 @@
 from flask import Flask, current_app, jsonify
 from werkzeug.exceptions import HTTPException
 
-from app.config import Config
+from app.config import Config, validate_production_config
 from app.extensions import cors, db, jwt, migrate
 
 
 def create_app(config_object: type[Config] = Config) -> Flask:
     app = Flask(__name__)
     app.config.from_object(config_object)
+
+    if app.config.get("APP_ENV") == "production":
+        validate_production_config(app.config)
 
     db.init_app(app)
     migrate.init_app(app, db)
