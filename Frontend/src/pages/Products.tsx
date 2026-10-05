@@ -18,7 +18,7 @@ import { listInventory, setInventory } from '../services/inventoryService'
 import { createProduct, listProducts, updateProduct } from '../services/productService'
 import { listShops } from '../services/shopService'
 import type { Inventory, Product, Shop } from '../types'
-import { LOW_STOCK_THRESHOLD } from '../utils/inventory'
+import { LOW_STOCK_THRESHOLD, stockLevel } from '../utils/inventory'
 
 export default function Products() {
   const { user } = useAuth()
@@ -129,6 +129,23 @@ export default function Products() {
     return result
   }, [products, inventoryByProduct, viewShopId])
 
+  const productQuantities = useMemo(() => {
+    const result = new Map<string, number[]>()
+    for (const product of products ?? []) {
+      const byShop = inventoryByProduct.get(product.id)
+      if (viewShopId === 'ALL') {
+        if (shops.length > 0) {
+          result.set(product.id, shops.map((shop) => byShop?.get(shop.id) ?? 0))
+        } else {
+          result.set(product.id, byShop && byShop.size > 0 ? Array.from(byShop.values()) : [0])
+        }
+      } else {
+        result.set(product.id, [byShop?.get(viewShopId) ?? 0])
+      }
+    }
+    return result
+  }, [products, inventoryByProduct, viewShopId, shops])
+
   const summary = useMemo(() => {
     const items = products ?? []
     let inStock = 0
@@ -155,15 +172,11 @@ export default function Products() {
       if (query && !`${product.name} ${product.category ?? ''}`.toLowerCase().includes(query)) {
         return false
       }
-      const quantity = viewStock.get(product.id) ?? 0
-      if (stockFilter === 'IN_STOCK' && quantity <= 0) return false
-      if (stockFilter === 'LOW_STOCK' && !(quantity > 0 && quantity <= LOW_STOCK_THRESHOLD)) {
-        return false
-      }
-      if (stockFilter === 'OUT_OF_STOCK' && quantity !== 0) return false
-      return true
+      if (stockFilter === 'ALL') return true
+      const quantities = productQuantities.get(product.id) ?? [0]
+      return quantities.some((q) => stockLevel(q) === stockFilter)
     })
-  }, [products, search, stockFilter, statusFilter, isSuperAdmin, viewStock])
+  }, [products, search, stockFilter, statusFilter, isSuperAdmin, productQuantities])
 
   const assignedShopName = useMemo(
     () => (isSuperAdmin ? null : (shops.find((s) => s.id === user?.shop_id)?.name ?? null)),
