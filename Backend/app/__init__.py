@@ -3,6 +3,7 @@ from werkzeug.exceptions import HTTPException
 
 from app.config import Config, validate_production_config
 from app.extensions import cors, db, jwt, migrate
+from app.utils.rate_limit import LoginRateLimiter
 
 
 def create_app(config_object: type[Config] = Config) -> Flask:
@@ -16,6 +17,12 @@ def create_app(config_object: type[Config] = Config) -> Flask:
     migrate.init_app(app, db)
     jwt.init_app(app)
     cors.init_app(app, resources={r"/api/*": {"origins": app.config["CORS_ORIGINS"]}})
+
+    app.extensions["login_rate_limiter"] = LoginRateLimiter(
+        max_attempts=app.config.get("LOGIN_RATE_LIMIT_MAX_ATTEMPTS", 5),
+        ip_max_attempts=app.config.get("LOGIN_RATE_LIMIT_IP_MAX_ATTEMPTS", 25),
+        window_seconds=app.config.get("LOGIN_RATE_LIMIT_WINDOW_SECONDS", 300),
+    )
 
     from app.routes.auth import auth_bp
     from app.routes.health import health_bp

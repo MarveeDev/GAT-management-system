@@ -1,9 +1,10 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, current_app, jsonify, request
 from flask_jwt_extended import create_access_token, jwt_required
 from werkzeug.security import check_password_hash
 
 from app.models.user import User, UserStatus
 from app.utils.auth import get_current_user
+from app.utils.rate_limit import client_ip
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -29,12 +30,26 @@ def login():
     if not email or not password:
         return jsonify({"message": "Email and password are required."}), 400
 
+    limiter = current_app.extensions["login_rate_limiter"]
+    ip = client_ip()
+    limited, retry_after = limiter.is_limited(ip, email)
+    if limited:
+        response = jsonify(
+            {"message": "Too many failed login attempts. Please try again later."}
+        )
+        if retry_after is not None:
+            response.headers["Retry-After"] = str(retry_after)
+        return response, 429
+
     user = User.query.filter_by(email=email).first()
     if user is None or not check_password_hash(user.password_hash, password):
+        limiter.record_failure(ip, email)
         return jsonify({"message": "Invalid email or password."}), 401
 
     if user.status != UserStatus.ACTIVE:
         return jsonify({"message": "Account is inactive."}), 403
+
+    limiter.record_success(ip, email)
 
     access_token = create_access_token(
         identity=user.id,

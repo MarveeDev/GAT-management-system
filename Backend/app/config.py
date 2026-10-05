@@ -34,6 +34,16 @@ def _env_list(name: str, default: str) -> list[str]:
     return [item.strip() for item in raw.split(",") if item.strip()]
 
 
+def _env_int(name: str, default: int) -> int:
+    raw = os.getenv(name)
+    if raw is None or raw.strip() == "":
+        return default
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return default
+
+
 # Development-only fallbacks. These are intentionally weak and must never be
 # used in production (enforced by validate_production_config below).
 _DEV_SECRET_KEY = "dev-only-secret-key-change-me"
@@ -83,6 +93,15 @@ class Config:
     SMS_API_KEY = os.getenv("SMS_API_KEY", "")
     SMS_SENDER_ID = os.getenv("SMS_SENDER_ID", "")
     SMS_MOCK_FAIL = _env_bool("SMS_MOCK_FAIL", default=False)
+
+    # Login rate limiting (in-process; per (ip, email) and per ip).
+    LOGIN_RATE_LIMIT_MAX_ATTEMPTS = _env_int("LOGIN_RATE_LIMIT_MAX_ATTEMPTS", 5)
+    LOGIN_RATE_LIMIT_IP_MAX_ATTEMPTS = _env_int(
+        "LOGIN_RATE_LIMIT_IP_MAX_ATTEMPTS", 25
+    )
+    LOGIN_RATE_LIMIT_WINDOW_SECONDS = _env_int(
+        "LOGIN_RATE_LIMIT_WINDOW_SECONDS", 300
+    )
 
 
 def validate_production_config(config) -> None:
