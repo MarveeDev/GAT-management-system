@@ -68,6 +68,7 @@ export default function SmsFilters({
             <option value="SENT">Sent</option>
             <option value="FAILED">Failed</option>
             <option value="PENDING">Pending</option>
+            <option value="REVIEW">Review</option>
           </select>
         </div>
 

@@ -1,7 +1,7 @@
 from sqlalchemy.orm import joinedload
 
 from app.extensions import db
-from app.models.product import Product
+from app.models.product import Product, ProductStatus
 from app.models.shop import Shop
 from app.models.shop_inventory import ShopInventory
 from app.models.stock_movement import StockMovement, StockMovementType
@@ -44,6 +44,10 @@ def list_inventory(
     query = ShopInventory.query.options(
         joinedload(ShopInventory.product), joinedload(ShopInventory.shop)
     )
+    if actor.role != UserRole.SUPER_ADMIN:
+        query = query.join(ShopInventory.product).filter(
+            Product.status == ProductStatus.ACTIVE
+        )
     if effective_shop_id:
         query = query.filter(ShopInventory.shop_id == effective_shop_id)
     if product_id:
@@ -56,7 +60,10 @@ def list_inventory(
 def get_product_inventory(
     actor: User, product_id: str
 ) -> tuple[list[ShopInventory] | None, tuple[int, str] | None]:
-    if db.session.get(Product, product_id) is None:
+    product = db.session.get(Product, product_id)
+    if product is None:
+        return None, (404, "Product not found.")
+    if actor.role != UserRole.SUPER_ADMIN and product.status != ProductStatus.ACTIVE:
         return None, (404, "Product not found.")
 
     effective_shop_id, error = _resolve_shop_access(actor, None)
