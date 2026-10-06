@@ -8,15 +8,19 @@ class SMSStatus:
     PENDING = "PENDING"
     SENT = "SENT"
     FAILED = "FAILED"
+    # Ambiguous provider outcome (see SMS recovery): the message may or may
+    # not have been delivered, and must NOT be automatically retried.
+    REVIEW = "REVIEW"
 
-    VALUES = (PENDING, SENT, FAILED)
+    VALUES = (PENDING, SENT, FAILED, REVIEW)
 
 
 class SMSLog(BaseModel):
     __tablename__ = "sms_logs"
     __table_args__ = (
         CheckConstraint(
-            "status IN ('PENDING', 'SENT', 'FAILED')", name="ck_sms_logs_status"
+            "status IN ('PENDING', 'SENT', 'FAILED', 'REVIEW')",
+            name="ck_sms_logs_status",
         ),
         Index("ix_sms_logs_created_at", "created_at"),
     )

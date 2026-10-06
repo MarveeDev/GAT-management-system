@@ -193,6 +193,52 @@ def retry_sms(actor: User, sms_log: SMSLog) -> tuple[SMSLog | None, tuple[int, s
     return sms_log, None
 
 
+def resolve_pending_sms(actor: User, sms_log: SMSLog) -> tuple[SMSLog | None, tuple[int, str] | None]:
+    """Safely resolve an orphaned PENDING SMS without resending it.
+
+    A PENDING record is ambiguous: the message may never have been sent, or it
+    may have been accepted by the provider right before the process crashed.
+    Because GONLINE offers no delivery-status lookup or idempotency, resending
+    would risk a duplicate. This marks the record REVIEW (a distinct,
+    non-retryable state) so it cannot flow back through the ordinary FAILED
+    retry path, which is available to STAFF/MANAGER.
+
+    Restricted to SUPER_ADMIN and gated by a minimum age so an in-flight send
+    cannot be resolved prematurely.
+    """
+    if actor.role != UserRole.SUPER_ADMIN:
+        return None, (403, "You do not have permission to perform this action.")
+    if sms_log.status != SMSStatus.PENDING:
+        return None, (400, "Only pending SMS can be resolved.")
+
+    threshold = int(current_app.config.get("SMS_PENDING_RECOVERY_SECONDS", 60))
+    age = 0.0
+    created_at = sms_log.created_at
+    if created_at is not None:
+        # SQLite returns timezone-naive datetimes; all timestamps are stored
+        # in UTC, so assume UTC when tzinfo is missing.
+        if created_at.tzinfo is None:
+            created_at = created_at.replace(tzinfo=timezone.utc)
+        age = (utcnow() - created_at).total_seconds()
+    if age < threshold:
+        return None, (400, "SMS is still in progress. Please try again later.")
+
+    sms_log.status = SMSStatus.REVIEW
+    sms_log.error_message = (
+        "SMS delivery outcome unknown (stale pending); review required."
+    )
+    add_audit_log(
+        actor.id,
+        sms_log.shop_id,
+        AuditAction.SMS_RECOVERY,
+        "SMS",
+        sms_log.id,
+        f"SMS pending recovery resolved for ...{_mask_phone(sms_log.phone_number)}.",
+    )
+    db.session.commit()
+    return sms_log, None
+
+
 def list_sms_logs(
     actor: User,
     *,

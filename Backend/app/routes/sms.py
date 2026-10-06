@@ -104,3 +104,19 @@ def retry_sms(sms_id):
         status, message = error
         return jsonify({"error": message}), status
     return jsonify({"sms": updated.to_dict()}), 200
+
+
+@sms_bp.post("/sms/<sms_id>/resolve")
+@roles_required("SUPER_ADMIN")
+def resolve_pending_sms(sms_id):
+    actor = get_current_user()
+    sms_log, error = sms_service.get_sms_log(actor, sms_id)
+    if error:
+        status, message = error
+        return jsonify({"error": message}), status
+
+    updated, error = sms_service.resolve_pending_sms(actor, sms_log)
+    if error:
+        status, message = error
+        return jsonify({"error": message}), status
+    return jsonify({"sms": updated.to_dict()}), 200

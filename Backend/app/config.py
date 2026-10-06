@@ -94,6 +94,10 @@ class Config:
     SMS_SENDER_ID = os.getenv("SMS_SENDER_ID", "")
     SMS_MOCK_FAIL = _env_bool("SMS_MOCK_FAIL", default=False)
 
+    # A PENDING SMS record must be at least this old (seconds) before it may
+    # be resolved as "outcome unknown". Prevents racing an in-flight send.
+    SMS_PENDING_RECOVERY_SECONDS = _env_int("SMS_PENDING_RECOVERY_SECONDS", 60)
+
     # Login rate limiting (in-process; per (ip, email) and per ip).
     LOGIN_RATE_LIMIT_MAX_ATTEMPTS = _env_int("LOGIN_RATE_LIMIT_MAX_ATTEMPTS", 5)
     LOGIN_RATE_LIMIT_IP_MAX_ATTEMPTS = _env_int(

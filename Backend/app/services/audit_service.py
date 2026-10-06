@@ -29,6 +29,7 @@ class AuditAction:
     SMS_SENT = "sms.sent"
     SMS_FAILED = "sms.failed"
     SMS_RETRY = "sms.retry"
+    SMS_RECOVERY = "sms.recovery"
 
 
 def add_audit_log(
