@@ -1,4 +1,4 @@
-export type SMSStatus = 'PENDING' | 'SENT' | 'FAILED'
+export type SMSStatus = 'PENDING' | 'SENT' | 'FAILED' | 'REVIEW'
 
 export interface SMSLog {
   id: string
