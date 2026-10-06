@@ -3,7 +3,7 @@ def test_health_endpoint(client):
     assert resp.status_code == 200
     data = resp.get_json()
     assert data["status"] == "ok"
-    assert data["service"] == "Great Alexender Enterprise API"
+    assert data["service"] == "GAT API"
 
 
 def test_db_health_endpoint(client):

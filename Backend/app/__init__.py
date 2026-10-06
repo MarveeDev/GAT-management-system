@@ -64,7 +64,7 @@ def create_app(config_object: type[Config] = Config) -> Flask:
     @app.route("/")
     def index():
         return {
-            "service": "Great Alexender Enterprise API",
+            "service": "GAT API",
             "status": "ok",
         }
 

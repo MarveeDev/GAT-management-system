@@ -11,7 +11,7 @@ def health():
     return jsonify(
         {
             "status": "ok",
-            "service": "Great Alexender Enterprise API",
+            "service": "GAT API",
         }
     )
 

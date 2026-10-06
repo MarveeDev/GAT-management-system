@@ -13,19 +13,19 @@ def init_cli(app: Flask) -> None:
         """Create the initial development shops (idempotent)."""
         shops = [
             {
-                "name": "Great Alexender Enterprise \u2014 Main Branch",
+                "name": "GAT \u2014 Main Branch",
                 "location": "",
                 "phone": "",
                 "sender_id": "",
             },
             {
-                "name": "Great Alexender Enterprise \u2014 Market Branch",
+                "name": "GAT \u2014 Market Branch",
                 "location": "",
                 "phone": "",
                 "sender_id": "",
             },
             {
-                "name": "Great Alexender Enterprise \u2014 City Branch",
+                "name": "GAT \u2014 City Branch",
                 "location": "",
                 "phone": "",
                 "sender_id": "",
