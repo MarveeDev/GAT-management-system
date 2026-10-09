@@ -1,0 +1,24 @@
+{
+  "name": "GREAT ALEXANDER TECH",
+  "short_name": "GAT",
+  "description": "GREAT ALEXANDER TECH (GAT) management system for shops, purchases, inventory, reporting and SMS.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#010080",
+  "icons": [
+    {
+      "src": "/pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
