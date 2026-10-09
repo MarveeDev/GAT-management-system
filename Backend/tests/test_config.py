@@ -7,6 +7,7 @@ from app.config import (
     _DEV_SECRET_KEY,
     _INSECURE_SECRET_VALUES,
     _env_bool,
+    _normalize_database_url,
     validate_production_config,
 )
 
@@ -55,6 +56,55 @@ def test_development_defaults_are_rejected_in_production():
 
 def test_development_database_falls_back_to_sqlite():
     assert Config.SQLALCHEMY_DATABASE_URI.startswith("sqlite:///")
+
+
+# --- PostgreSQL URL normalization ------------------------------------------
+
+
+def test_postgres_scheme_normalized_to_psycopg():
+    assert (
+        _normalize_database_url("postgres://user:pass@host:5432/db")
+        == "postgresql+psycopg://user:pass@host:5432/db"
+    )
+
+
+def test_postgresql_scheme_normalized_to_psycopg():
+    assert (
+        _normalize_database_url("postgresql://user:pass@host:5432/db")
+        == "postgresql+psycopg://user:pass@host:5432/db"
+    )
+
+
+def test_postgresql_psycopg_scheme_left_unchanged():
+    url = "postgresql+psycopg://user:pass@host:5432/db"
+    assert _normalize_database_url(url) == url
+
+
+def test_normalization_preserves_url_components():
+    url = "postgresql://user:pass@host:5432/dbname?sslmode=require&application_name=gat"
+    assert _normalize_database_url(url) == (
+        "postgresql+psycopg://user:pass@host:5432/dbname"
+        "?sslmode=require&application_name=gat"
+    )
+
+
+def test_normalization_preserves_postgres_scheme_components():
+    url = "postgres://user:p%40ss@host:5432/dbname?sslmode=require"
+    assert _normalize_database_url(url) == (
+        "postgresql+psycopg://user:p%40ss@host:5432/dbname?sslmode=require"
+    )
+
+
+def test_non_postgres_schemes_are_unchanged():
+    assert _normalize_database_url("sqlite:///app.db") == "sqlite:///app.db"
+    assert (
+        _normalize_database_url("mysql://user:pass@host:3306/db")
+        == "mysql://user:pass@host:3306/db"
+    )
+
+
+def test_empty_database_url_is_unchanged():
+    assert _normalize_database_url("") == ""
 
 
 # --- boolean parsing ------------------------------------------------------

@@ -44,6 +44,25 @@ def _env_int(name: str, default: int) -> int:
         return default
 
 
+def _normalize_database_url(url: str) -> str:
+    """Normalize a PostgreSQL URL to the installed ``psycopg`` v3 driver.
+
+    SQLAlchemy treats a bare ``postgresql://`` URL as the psycopg2 driver, which
+    is not installed; ``psycopg`` (v3) is selected via the
+    ``postgresql+psycopg://`` scheme. Only the scheme is rewritten; hostname,
+    port, database, credentials and query parameters are preserved verbatim.
+    """
+    if not url:
+        return url
+    if url.startswith("postgresql+psycopg://"):
+        return url
+    if url.startswith("postgres://"):
+        return "postgresql+psycopg://" + url[len("postgres://"):]
+    if url.startswith("postgresql://"):
+        return "postgresql+psycopg://" + url[len("postgresql://"):]
+    return url
+
+
 # Development-only fallbacks. These are intentionally weak and must never be
 # used in production (enforced by validate_production_config below).
 _DEV_SECRET_KEY = "dev-only-secret-key-change-me"
@@ -83,7 +102,7 @@ class Config:
     DEBUG = _env_bool("FLASK_DEBUG", default=False) and APP_ENV != "production"
 
     DATABASE_URL = os.getenv("DATABASE_URL", "")
-    SQLALCHEMY_DATABASE_URI = DATABASE_URL or (
+    SQLALCHEMY_DATABASE_URI = _normalize_database_url(DATABASE_URL) or (
         f"sqlite:///{os.path.join(BASE_DIR, 'dev.db')}"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
