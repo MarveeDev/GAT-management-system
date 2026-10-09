@@ -1,14 +1,13 @@
 import { useState, type FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { Lock, Mail } from 'lucide-react'
 
 import ErrorMessage from '../components/ErrorMessage'
 import { BRAND_NAME } from '../config/branding'
 import { useAuth } from '../contexts/authContext'
 
-const CURRENT_YEAR = new Date().getFullYear()
-
 const inputClass =
-  'w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30'
+  'w-full rounded-xl border border-[#E4EAF2] bg-white py-[15px] text-base text-[#142B49] placeholder:text-[#7186A5] transition-colors focus:border-[#2864F0] focus:outline-none focus:ring-2 focus:ring-[#2864F0]/30'
 
 export default function Login() {
   const { login } = useAuth()
@@ -39,59 +38,68 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-screen">
-      <div className="hidden flex-1 flex-col justify-between bg-navy-900 p-10 text-white lg:flex">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600 text-base font-bold">
-            {BRAND_NAME}
-          </div>
-          <div>
-            <p className="text-lg font-semibold leading-tight">{BRAND_NAME}</p>
-            <p className="text-sm text-white/60">Centralized Management System</p>
-          </div>
+    <div className="flex min-h-screen items-center justify-center bg-[#F1F4F9] p-2.5">
+      <div className="flex w-full max-w-[1628px] flex-col overflow-hidden rounded-[20px] border border-[#E4EAF2] bg-[#F8FAFD] shadow-[0_16px_50px_-20px_rgba(20,43,73,0.25)] lg:min-h-[calc(100vh-20px)] lg:flex-row">
+        <div className="relative h-56 shrink-0 overflow-hidden bg-white lg:h-auto lg:w-[49.5%]">
+          <img
+            src="/gat-products-hero.jpg"
+            alt="GREAT ALEXANDER TECH product range"
+            className="absolute inset-0 block h-full w-full object-contain object-center"
+          />
         </div>
-        <p className="text-sm text-white/50">© {CURRENT_YEAR} {BRAND_NAME}</p>
-      </div>
 
-      <div className="flex flex-1 items-center justify-center bg-slate-50 px-6 py-12">
-        <div className="w-full max-w-md">
-          <div className="mb-8 flex items-center justify-center gap-3 lg:hidden">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600 text-base font-bold text-white">
+        <div className="flex flex-1 items-center justify-center bg-[#F8FAFD] px-5 py-10 sm:px-8 lg:py-12">
+          <div className="w-full max-w-[616px] rounded-[20px] border border-[#E4EAF2] bg-white p-7 shadow-[0_8px_30px_-18px_rgba(20,43,73,0.3)] sm:p-11">
+            <div className="flex h-[70px] w-[71px] items-center justify-center rounded-2xl bg-[#2864F0] text-[26px] font-bold leading-none text-white">
               {BRAND_NAME}
             </div>
-            <div>
-              <p className="text-lg font-semibold text-navy-900">{BRAND_NAME}</p>
-              <p className="text-xs text-slate-500">Centralized Management System</p>
-            </div>
-          </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-            <h1 className="text-xl font-semibold text-slate-900">Sign in</h1>
-            <p className="mt-1 text-sm text-slate-500">Enter your credentials to continue.</p>
+            <h1 className="mt-5 text-[30px] font-bold leading-tight text-[#142B49]">
+              Welcome back
+            </h1>
+            <p className="mt-2.5 text-lg text-[#7186A5]">
+              Sign in to your GAT account to continue.
+            </p>
 
-            <form onSubmit={handleSubmit} className="mt-6 space-y-4" noValidate>
+            <form onSubmit={handleSubmit} noValidate className="mt-10">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-slate-700">
+                <label
+                  htmlFor="email"
+                  className="block text-base font-medium text-[#142B49]"
+                >
                   Email
                 </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={`${inputClass} mt-1`}
-                  placeholder="you@example.com"
-                />
+                <div className="relative mt-2">
+                  <Mail
+                    className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-[#7186A5]"
+                    aria-hidden="true"
+                  />
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={`${inputClass} pl-12 pr-4`}
+                    placeholder="you@example.com"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+              <div className="mt-7">
+                <label
+                  htmlFor="password"
+                  className="block text-base font-medium text-[#142B49]"
+                >
                   Password
                 </label>
-                <div className="relative mt-1">
+                <div className="relative mt-2">
+                  <Lock
+                    className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-[#7186A5]"
+                    aria-hidden="true"
+                  />
                   <input
                     id="password"
                     name="password"
@@ -100,26 +108,30 @@ export default function Login() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className={`${inputClass} pr-16`}
+                    className={`${inputClass} pl-12 pr-16`}
                     placeholder="Enter your password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    className="absolute inset-y-0 right-0 flex items-center px-3 text-sm font-medium text-slate-500 hover:text-slate-700"
+                    className="absolute inset-y-0 right-0 flex items-center px-4 text-[15px] font-semibold text-[#2864F0] transition-colors hover:text-[#1d4ed8]"
                   >
                     {showPassword ? 'Hide' : 'Show'}
                   </button>
                 </div>
               </div>
 
-              <ErrorMessage message={error ?? undefined} title="Unable to sign in" />
+              {error && (
+                <div className="mt-6">
+                  <ErrorMessage message={error} title="Unable to sign in" />
+                </div>
+              )}
 
               <button
                 type="submit"
                 disabled={submitting}
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
+                className="mt-6 flex h-[57px] w-full items-center justify-center gap-2 rounded-xl bg-[#2864F0] px-4 text-[17px] font-semibold text-white transition-colors hover:bg-[#1d4ed8] focus:outline-none focus:ring-2 focus:ring-[#2864F0] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {submitting && (
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />

@@ -13,6 +13,16 @@ export function stockLevel(quantity: number): StockLevel {
   return 'IN_STOCK'
 }
 
+export function worstStockLevel(quantities: number[]): StockLevel {
+  let level: StockLevel = 'IN_STOCK'
+  for (const quantity of quantities) {
+    const candidate = stockLevel(quantity)
+    if (candidate === 'OUT_OF_STOCK') return 'OUT_OF_STOCK'
+    if (candidate === 'LOW_STOCK') level = 'LOW_STOCK'
+  }
+  return level
+}
+
 export function buildInventoryByProduct(
   inventory: Inventory[],
 ): Map<string, Map<string, number>> {

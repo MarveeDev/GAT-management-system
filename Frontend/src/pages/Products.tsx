@@ -18,7 +18,7 @@ import { listInventory, setInventory } from '../services/inventoryService'
 import { createProduct, listProducts, updateProduct } from '../services/productService'
 import { listShops } from '../services/shopService'
 import type { Inventory, Product, Shop } from '../types'
-import { LOW_STOCK_THRESHOLD, stockLevel } from '../utils/inventory'
+import { stockLevel, worstStockLevel } from '../utils/inventory'
 
 export default function Products() {
   const { user } = useAuth()
@@ -112,23 +112,6 @@ export default function Products() {
     return map
   }, [inventory])
 
-  const viewStock = useMemo(() => {
-    const result = new Map<string, number>()
-    for (const product of products ?? []) {
-      const byShop = inventoryByProduct.get(product.id)
-      let quantity = 0
-      if (viewShopId === 'ALL') {
-        if (byShop) {
-          for (const q of byShop.values()) quantity += q
-        }
-      } else {
-        quantity = byShop?.get(viewShopId) ?? 0
-      }
-      result.set(product.id, quantity)
-    }
-    return result
-  }, [products, inventoryByProduct, viewShopId])
-
   const productQuantities = useMemo(() => {
     const result = new Map<string, number[]>()
     for (const product of products ?? []) {
@@ -152,16 +135,14 @@ export default function Products() {
     let lowStock = 0
     let outOfStock = 0
     for (const product of items) {
-      const quantity = viewStock.get(product.id) ?? 0
-      if (quantity === 0) {
-        outOfStock += 1
-      } else {
-        inStock += 1
-        if (quantity <= LOW_STOCK_THRESHOLD) lowStock += 1
-      }
+      const quantities = productQuantities.get(product.id) ?? [0]
+      const level = worstStockLevel(quantities)
+      if (level === 'OUT_OF_STOCK') outOfStock += 1
+      else if (level === 'LOW_STOCK') lowStock += 1
+      else inStock += 1
     }
     return { total: items.length, inStock, lowStock, outOfStock }
-  }, [products, viewStock])
+  }, [products, productQuantities])
 
   const visibleProducts = useMemo(() => {
     if (!products) return []

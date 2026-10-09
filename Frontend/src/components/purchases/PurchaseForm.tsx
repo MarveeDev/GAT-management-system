@@ -4,6 +4,7 @@ import type { Product, PurchaseCreatePayload, Shop } from '../../types'
 import { formatCurrency } from '../../utils/format'
 import StockBadge from '../products/StockBadge'
 import ErrorMessage from '../ErrorMessage'
+import ProductSearchSelect from './ProductSearchSelect'
 
 export interface PurchasePreviewValues {
   customerName: string
@@ -238,22 +239,19 @@ export default function PurchaseForm({
             <label htmlFor="purchase-product" className="block text-sm font-medium text-slate-700">
               Product <span className="text-danger-600">*</span>
             </label>
-            <select
-              id="purchase-product"
-              value={productId}
-              onChange={(event) => {
-                setProductId(event.target.value)
-                setUnitPrice('')
-              }}
-              className={inputClass}
-            >
-              <option value="">Select a product…</option>
-              {products.map((product) => (
-                <option key={product.id} value={product.id}>
-                  {product.name}
-                </option>
-              ))}
-            </select>
+            <div className="mt-1">
+              <ProductSearchSelect
+                inputId="purchase-product"
+                products={products}
+                stockByProductAndShop={inventoryByProduct}
+                effectiveShopId={effectiveShopId}
+                value={productId}
+                onChange={(productId) => {
+                  setProductId(productId)
+                  setUnitPrice('')
+                }}
+              />
+            </div>
           </div>
 
           {selectedProduct && (
